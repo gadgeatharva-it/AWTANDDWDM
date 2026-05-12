@@ -9,6 +9,12 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import Events from './pages/Events';
+import ActivityLogs from './pages/ActivityLogs';
+import Users from './pages/Users';
+import QandA from './pages/QandA';
+import MyRegisteredEvents from './pages/MyRegisteredEvents';
+import UpcomingEvents from './pages/UpcomingEvents';
+import Notifications from './pages/Notifications';
 
 export default function App() {
   return (
@@ -32,6 +38,12 @@ export default function App() {
                   <Route index element={<Navigate to="/app/dashboard" replace />} />
                   <Route path="dashboard" element={<Dashboard />} />
                   <Route path="events" element={<Events />} />
+                  <Route path="activity" element={<ActivityLogs />} />
+                  <Route path="users" element={<Users />} />
+                  <Route path="my-events" element={<MyRegisteredEvents />} />
+                  <Route path="upcoming" element={<UpcomingEvents />} />
+                  <Route path="notifications" element={<Notifications />} />
+                  <Route path="qa" element={<QandA />} />
                 </Route>
                 <Route path="*" element={<Navigate to="/login" replace />} />
               </Routes>

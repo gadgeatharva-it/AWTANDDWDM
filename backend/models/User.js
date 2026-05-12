@@ -30,6 +30,11 @@ const userSchema = new mongoose.Schema(
       default: 'attendee',
       set: (value) => (value === 'organizer' ? 'organiser' : value),
     },
+    isActive: {
+      type: Boolean,
+      default: true,
+      index: true,
+    },
   },
   { timestamps: true }
 );

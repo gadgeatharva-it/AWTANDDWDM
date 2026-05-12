@@ -4,7 +4,7 @@ import { useToast } from '../context/ToastContext';
 import { useDarkMode } from '../context/DarkModeContext';
 import useViewport from '../hooks/useViewport';
 
-const navItems = [
+const baseNavItems = [
   { to: '/app/dashboard', label: 'Dashboard', icon: '📊' },
   { to: '/app/events', label: 'Events', icon: '🗓️' },
 ];
@@ -15,6 +15,20 @@ export default function Sidebar({ open, onClose }) {
   const navigate = useNavigate();
   const { dark, theme } = useDarkMode();
   const { isDesktop } = useViewport();
+
+  const showActivityLogs = user?.role === 'organiser' || user?.role === 'admin';
+  const showQandA = Boolean(user);
+  const showAttendeeExtras = user?.role === 'attendee';
+
+  const navItems = [
+    ...baseNavItems,
+    ...(showAttendeeExtras ? [{ to: '/app/my-events', label: 'My Registered Events', icon: '🧾' }] : []),
+    ...(showAttendeeExtras ? [{ to: '/app/upcoming', label: 'Upcoming (7 days)', icon: '⏳' }] : []),
+    ...(showAttendeeExtras ? [{ to: '/app/notifications', label: 'Notifications', icon: '🔔' }] : []),
+    ...(showActivityLogs ? [{ to: '/app/activity', label: 'Activity Logs', icon: '📜' }] : []),
+    ...(showActivityLogs ? [{ to: '/app/users', label: 'Users', icon: '👥' }] : []),
+    ...(showQandA ? [{ to: '/app/qa', label: 'Q&A', icon: '💬' }] : []),
+  ];
 
   const handleLogout = () => {
     logout();
@@ -38,7 +52,10 @@ export default function Sidebar({ open, onClose }) {
 
   return (
     <>
-      {open && !isDesktop && <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: theme.overlay, zIndex: 39 }} />}
+      {open && !isDesktop && (
+        <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: theme.overlay, zIndex: 39 }} />
+      )}
+
       <aside style={{
         position: 'fixed',
         top: 0,
@@ -54,7 +71,8 @@ export default function Sidebar({ open, onClose }) {
         transform: isDesktop || open ? 'translateX(0)' : 'translateX(-100%)',
         transition: 'transform 0.25s ease, background 0.3s',
         boxShadow: !isDesktop && open ? '4px 0 20px rgba(0,0,0,0.08)' : 'none',
-      }}>
+      }}
+      >
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 32, paddingLeft: 8 }}>
           <span style={{ fontSize: 22 }}>🎪</span>
           <span style={{ fontWeight: 700, fontSize: 18, color: theme.text }}>EventFlow</span>
@@ -74,9 +92,17 @@ export default function Sidebar({ open, onClose }) {
             <div style={{ fontWeight: 600, fontSize: 14, color: theme.text, marginBottom: 12 }}>{user.name}</div>
             <div style={{ fontSize: 12, color: theme.textFaint, marginBottom: 12, wordBreak: 'break-word', lineHeight: 1.4 }}>{user.email}</div>
             <button onClick={handleLogout} style={{
-              width: '100%', padding: '9px 0', borderRadius: 8, border: `1px solid ${dark ? '#7f1d1d' : '#fee2e2'}`,
-              background: dark ? 'rgba(239,68,68,0.1)' : '#fff5f5', color: '#ef4444', fontWeight: 600, fontSize: 14, cursor: 'pointer',
-            }}>
+              width: '100%',
+              padding: '9px 0',
+              borderRadius: 8,
+              border: `1px solid ${dark ? '#7f1d1d' : '#fee2e2'}`,
+              background: dark ? 'rgba(239,68,68,0.1)' : '#fff5f5',
+              color: '#ef4444',
+              fontWeight: 600,
+              fontSize: 14,
+              cursor: 'pointer',
+            }}
+            >
               Logout
             </button>
           </div>

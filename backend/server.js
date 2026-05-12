@@ -7,6 +7,8 @@ const mongoose = require('mongoose');
 const authRoutes = require('./routes/auth');
 const eventRoutes = require('./routes/events');
 const registrationRoutes = require('./routes/registrations');
+const userRoutes = require('./routes/users');
+const questionRoutes = require('./routes/questions');
 
 const app = express();
 
@@ -22,6 +24,8 @@ app.use(express.json({ limit: '10kb' }));
 app.use('/api/auth', authRoutes);
 app.use('/api/events', eventRoutes);
 app.use('/api/registrations', registrationRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/questions', questionRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => res.json({ status: 'ok' }));

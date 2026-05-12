@@ -77,7 +77,7 @@ exports.cancelRegistration = async (req, res, next) => {
 exports.getMyRegistrations = async (req, res, next) => {
   try {
     const registrations = await Registration.find({ attendee: req.user.id, status: 'confirmed' })
-      .populate('event', 'title startDate location category status')
+      .populate('event', 'title startDate endDate location category status updatedAt')
       .sort({ createdAt: -1 });
     res.json(registrations);
   } catch (err) {
@@ -99,6 +99,62 @@ exports.getEventAttendees = async (req, res, next) => {
       .sort({ createdAt: -1 });
 
     res.json(registrations);
+  } catch (err) {
+    next(err);
+  }
+};
+
+// GET /api/registrations/activity — activity feed for organisers/admins
+exports.getRegistrationActivity = async (req, res, next) => {
+  try {
+    if (req.user.role === 'attendee') return res.status(403).json({ message: 'Not authorised' });
+
+    const { page = 1, limit = 20, eventId, attendeeId } = req.query;
+    const safeLimit = Math.min(100, Math.max(1, Number(limit) || 20));
+    const safePage = Math.max(1, Number(page) || 1);
+    const skip = (safePage - 1) * safeLimit;
+
+    const eventFilter = {};
+    if (req.user.role !== 'admin') eventFilter.organiser = req.user.id;
+    if (eventId) eventFilter._id = eventId;
+
+    const eventIds = await Event.find(eventFilter).select('_id').lean();
+    const ids = eventIds.map((row) => row._id);
+
+    if (ids.length === 0) {
+      return res.json({ logs: [], total: 0, page: safePage, pages: 0 });
+    }
+
+    const registrationFilter = { event: { $in: ids } };
+    if (attendeeId) registrationFilter.attendee = attendeeId;
+
+    const [logs, total] = await Promise.all([
+      Registration.find(registrationFilter)
+        .populate('event', 'title organiser')
+        .populate('attendee', 'name email')
+        .sort({ updatedAt: -1 })
+        .skip(skip)
+        .limit(safeLimit)
+        .lean(),
+      Registration.countDocuments(registrationFilter),
+    ]);
+
+    res.json({
+      logs: logs.map((row) => ({
+        _id: row._id,
+        status: row.status,
+        notes: row.notes,
+        createdAt: row.createdAt,
+        updatedAt: row.updatedAt,
+        activityAt: row.status === 'cancelled' ? row.updatedAt : row.createdAt,
+        type: row.status === 'cancelled' ? 'registration_cancelled' : 'registration_confirmed',
+        attendee: row.attendee,
+        event: row.event,
+      })),
+      total,
+      page: safePage,
+      pages: Math.ceil(total / safeLimit),
+    });
   } catch (err) {
     next(err);
   }

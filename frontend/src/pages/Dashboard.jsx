@@ -216,10 +216,27 @@ export default function Dashboard() {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 16 }}>
         <StatCard label="Total Events" value={overview.totalEvents} color="#6366f1" theme={theme} isMobile={isMobile} />
         <StatCard label="Total Registrations" value={overview.totalRegistrations} color="#10b981" theme={theme} isMobile={isMobile} />
-        <StatCard label="Total Revenue" value={`Rs ${overview.totalRevenue.toLocaleString()}`} color="#f59e0b" theme={theme} isMobile={isMobile} />
-        <StatCard label="Avg Capacity Used" value={`${Math.round((overview.avgCapacityUsed || 0) * 100)}%`} color="#ec4899" theme={theme} isMobile={isMobile} />
+        {showAdvancedAnalytics && (
+          <StatCard
+            label="Total Revenue"
+            value={`Rs ${overview.totalRevenue.toLocaleString()}`}
+            color="#f59e0b"
+            theme={theme}
+            isMobile={isMobile}
+          />
+        )}
+        {showAdvancedAnalytics && (
+          <StatCard
+            label="Avg Capacity Used"
+            value={`${Math.round((overview.avgCapacityUsed || 0) * 100)}%`}
+            color="#ec4899"
+            theme={theme}
+            isMobile={isMobile}
+          />
+        )}
       </div>
 
+      {showAdvancedAnalytics && (
       <div style={{ display: 'grid', gridTemplateColumns: `repeat(auto-fit, minmax(${isMobile ? 240 : 300}px, 1fr))`, gap: 20 }}>
         <Panel title="Events by Category" theme={theme}>
           {categoryData.length === 0 ? (
@@ -249,6 +266,8 @@ export default function Dashboard() {
           </div>
         </Panel>
       </div>
+      )}
+
 
       {showAdvancedAnalytics && (
         <>

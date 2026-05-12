@@ -9,7 +9,6 @@ export default function Register() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [role, setRole] = useState('attendee');
   const { register, loading, error } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -23,7 +22,7 @@ export default function Register() {
       return;
     }
     try {
-      await register(name, email, password, role);
+      await register(name, email, password, 'attendee');
       toast.success('Account created!');
       navigate('/app/dashboard');
     } catch (err) {
@@ -68,14 +67,6 @@ export default function Register() {
           <div>
             <label style={{ fontSize: 13, fontWeight: 500, color: theme.textSecondary, display: 'block', marginBottom: 4 }}>Password</label>
             <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="new-password" required style={inputStyle} placeholder="Min. 6 characters" />
-          </div>
-
-          <div>
-            <label style={{ fontSize: 13, fontWeight: 500, color: theme.textSecondary, display: 'block', marginBottom: 4 }}>Role</label>
-            <select value={role} onChange={(e) => setRole(e.target.value)} style={inputStyle}>
-              <option value="attendee">Attendee</option>
-              <option value="organiser">Organiser</option>
-            </select>
           </div>
 
           {error && <div style={{ padding: '10px 12px', borderRadius: 8, background: '#fef2f2', border: '1px solid #fecaca', color: '#b91c1c', fontSize: 13 }}>{error}</div>}

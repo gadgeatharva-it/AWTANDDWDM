@@ -13,6 +13,7 @@ exports.protect = async (req, res, next) => {
 
     const user = await User.findById(decoded.id);
     if (!user) return res.status(401).json({ message: 'User no longer exists' });
+    if (user.isActive === false) return res.status(401).json({ message: 'Account is deactivated' });
 
     req.user = { id: user._id.toString(), role: user.role, name: user.name };
     next();

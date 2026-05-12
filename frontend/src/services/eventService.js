@@ -13,4 +13,5 @@ export const eventService = {
   cancelRegistration: (eventId) => api.delete(`/registrations/cancel/${eventId}`),
   getMyRegistrations: () => api.get('/registrations/my'),
   getAttendees: (eventId) => api.get(`/registrations/event/${eventId}`),
+  getRegistrationActivity: (params) => api.get('/registrations/activity', { params }),
 };
