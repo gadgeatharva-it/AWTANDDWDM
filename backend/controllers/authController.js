@@ -1,5 +1,4 @@
 const jwt = require('jsonwebtoken');
-const { validationResult } = require('express-validator');
 const User = require('../models/User');
 
 const signToken = (id) =>
@@ -7,13 +6,27 @@ const signToken = (id) =>
     expiresIn: process.env.JWT_EXPIRES_IN || '7d',
   });
 
+function isValidEmail(email) {
+  return typeof email === 'string' && /^\S+@\S+\.\S+$/.test(email);
+}
+
+function normalizeRole(role) {
+  if (role === 'organizer') return 'organiser';
+  if (role === 'organiser' || role === 'attendee' || role === 'admin') return role;
+  return 'attendee';
+}
+
 // POST /api/auth/register
 exports.register = async (req, res, next) => {
   try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
+    const name = typeof req.body?.name === 'string' ? req.body.name.trim() : '';
+    const email = typeof req.body?.email === 'string' ? req.body.email.trim().toLowerCase() : '';
+    const password = typeof req.body?.password === 'string' ? req.body.password : '';
+    const role = normalizeRole(req.body?.role);
 
-    const { name, email, password, role } = req.body;
+    if (!name) return res.status(400).json({ message: 'Name is required' });
+    if (!isValidEmail(email)) return res.status(400).json({ message: 'Valid email is required' });
+    if (password.length < 6) return res.status(400).json({ message: 'Password must be at least 6 characters' });
 
     const existing = await User.findOne({ email });
     if (existing) return res.status(409).json({ message: 'Email already in use' });
@@ -33,10 +46,11 @@ exports.register = async (req, res, next) => {
 // POST /api/auth/login
 exports.login = async (req, res, next) => {
   try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
+    const email = typeof req.body?.email === 'string' ? req.body.email.trim().toLowerCase() : '';
+    const password = typeof req.body?.password === 'string' ? req.body.password : '';
 
-    const { email, password } = req.body;
+    if (!isValidEmail(email)) return res.status(400).json({ message: 'Valid email is required' });
+    if (!password) return res.status(400).json({ message: 'Password is required' });
 
     const user = await User.findOne({ email }).select('+password');
     if (!user || !(await user.comparePassword(password))) {

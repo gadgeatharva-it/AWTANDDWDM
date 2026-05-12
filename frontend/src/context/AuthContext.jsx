@@ -1,13 +1,21 @@
 import { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { authService } from '../services/authService';
+import { API_BASE_URL } from '../services/api';
 
 const AuthContext = createContext();
-const NETWORK_ERROR = 'Unable to reach the server. Please make sure the backend is running on port 5000.';
+const NETWORK_ERROR = `Unable to reach the server. Check backend + API URL (currently: ${API_BASE_URL}).`;
+const BAD_API_TARGET_ERROR =
+  `Login API not found at ${API_BASE_URL}. If you opened the frontend without the dev server/proxy, set REACT_APP_API_BASE_URL (e.g. http://localhost:5000/api) or run the frontend with \`npm start\` from \`frontend\`.`;
+
+function looksLikeHtml(data) {
+  return typeof data === 'string' && /<!doctype html>|<html[\s>]/i.test(data);
+}
 
 function getAuthErrorMessage(err, fallback) {
   if (!err.response) return NETWORK_ERROR;
 
   const data = err.response.data;
+  if (looksLikeHtml(data)) return BAD_API_TARGET_ERROR;
   if (data?.message) return data.message;
   if (Array.isArray(data?.errors) && data.errors.length > 0) {
     return data.errors[0].msg || data.errors[0].message || fallback;
@@ -19,8 +27,24 @@ function getAuthErrorMessage(err, fallback) {
 function clearSavedAuth() {
   localStorage.removeItem('token');
   localStorage.removeItem('user');
-  sessionStorage.removeItem('token');
-  sessionStorage.removeItem('user');
+}
+
+function readSavedAuth() {
+  const rawToken = localStorage.getItem('token');
+  const rawUser = localStorage.getItem('user');
+  if (!rawToken || !rawUser) return null;
+  try {
+    const user = JSON.parse(rawUser);
+    if (!user?.id) return null;
+    return { token: rawToken, user };
+  } catch {
+    return null;
+  }
+}
+
+function saveAuth({ token, user }) {
+  localStorage.setItem('token', token);
+  localStorage.setItem('user', JSON.stringify(user));
 }
 
 export function AuthProvider({ children }) {
@@ -29,7 +53,8 @@ export function AuthProvider({ children }) {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    clearSavedAuth();
+    const saved = readSavedAuth();
+    if (saved?.user) setUser(saved.user);
   }, []);
 
   const login = useCallback(async (email, password) => {
@@ -40,8 +65,7 @@ export function AuthProvider({ children }) {
         email: email.trim().toLowerCase(),
         password,
       });
-      sessionStorage.setItem('token', data.token);
-      sessionStorage.setItem('user', JSON.stringify(data.user));
+      saveAuth({ token: data.token, user: data.user });
       setUser(data.user);
       return data.user;
     } catch (err) {
@@ -63,8 +87,7 @@ export function AuthProvider({ children }) {
         password,
         role,
       });
-      sessionStorage.setItem('token', data.token);
-      sessionStorage.setItem('user', JSON.stringify(data.user));
+      saveAuth({ token: data.token, user: data.user });
       setUser(data.user);
       return data.user;
     } catch (err) {

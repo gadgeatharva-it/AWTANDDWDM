@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # EventFlow
 
 Full-stack Event Management & Analysis app.
@@ -70,3 +71,6 @@ cd frontend
 npm install
 npm start
 ```
+=======
+# AWTANDDWDM
+>>>>>>> f249493c768a4d27f9e95ec1f4d65980869ab3bc

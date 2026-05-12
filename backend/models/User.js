@@ -25,8 +25,10 @@ const userSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      enum: ['attendee', 'organiser', 'admin'],
+      // Support both spellings coming from the UI.
+      enum: ['attendee', 'organiser', 'organizer', 'admin'],
       default: 'attendee',
+      set: (value) => (value === 'organizer' ? 'organiser' : value),
     },
   },
   { timestamps: true }

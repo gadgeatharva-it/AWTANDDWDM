@@ -1,4 +1,5 @@
-require('dotenv').config();
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '.env') });
 const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
@@ -10,7 +11,11 @@ const registrationRoutes = require('./routes/registrations');
 const app = express();
 
 // Security middleware
-app.use(cors({ origin: process.env.CLIENT_URL || 'http://localhost:3000', credentials: true }));
+const corsOptions =
+  process.env.NODE_ENV === 'production'
+    ? { origin: process.env.CLIENT_URL, credentials: true }
+    : { origin: true, credentials: true };
+app.use(cors(corsOptions));
 app.use(express.json({ limit: '10kb' }));
 
 // Routes
