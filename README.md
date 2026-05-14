@@ -48,3 +48,18 @@ Deploy backend and frontend as two separate services.
 Notes:
 - For Atlas, ensure Network Access allows your Render service to connect.
 - Never commit secrets: keep `.env` files local only.
+
+## Netlify (frontend) + Render (backend)
+
+If you host the frontend on Netlify and the backend on Render, you must point the React app at the Render API.
+
+### Netlify site settings
+- Build command: `npm install && npm run build`
+- Publish directory: `frontend/build`
+- Environment variables:
+  - `REACT_APP_API_BASE_URL=https://<your-backend>.onrender.com` (no trailing slash)
+
+The frontend will call `https://<your-backend>.onrender.com/api/...` automatically.
+
+### Render backend env
+- Set `CLIENT_URL` to your Netlify site URL (e.g. `https://<your-site>.netlify.app`) if you want strict CORS.

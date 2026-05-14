@@ -5,7 +5,7 @@ import { API_BASE_URL } from '../services/api';
 const AuthContext = createContext();
 const NETWORK_ERROR = `Unable to reach the server. Check backend + API URL (currently: ${API_BASE_URL}).`;
 const BAD_API_TARGET_ERROR =
-  `Login API not found at ${API_BASE_URL}. If you opened the frontend without the dev server/proxy, set REACT_APP_API_BASE_URL (e.g. http://localhost:5000/api) or run the frontend with \`npm start\` from \`frontend\`.`;
+  `Login API not found at ${API_BASE_URL}. Set REACT_APP_API_BASE_URL to your backend (e.g. https://your-backend.onrender.com or http://localhost:5000/api). If deployed on Netlify, add the env var in Site settings and trigger a new deploy (CRA env vars are baked in at build time). For local dev, you can also run the frontend with \`npm start\` from \`frontend\`.`;
 
 function looksLikeHtml(data) {
   return typeof data === 'string' && /<!doctype html>|<html[\s>]/i.test(data);
@@ -49,12 +49,36 @@ function saveAuth({ token, user }) {
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
+  const [initializing, setInitializing] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    const saved = readSavedAuth();
-    if (saved?.user) setUser(saved.user);
+    let cancelled = false;
+
+    async function init() {
+      const saved = readSavedAuth();
+      if (!saved?.token || !saved?.user) {
+        if (!cancelled) setInitializing(false);
+        return;
+      }
+
+      // Verify token/user with backend so a stale token doesn't keep the UI "logged in" after refresh.
+      try {
+        const { data } = await authService.getMe();
+        if (!cancelled) setUser(data?.user || saved.user);
+      } catch {
+        clearSavedAuth();
+        if (!cancelled) setUser(null);
+      } finally {
+        if (!cancelled) setInitializing(false);
+      }
+    }
+
+    init();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const login = useCallback(async (email, password) => {
@@ -105,7 +129,7 @@ export function AuthProvider({ children }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, loading, error, login, register, logout, isAuthenticated: !!user }}>
+    <AuthContext.Provider value={{ user, initializing, loading, error, login, register, logout, isAuthenticated: !!user }}>
       {children}
     </AuthContext.Provider>
   );
