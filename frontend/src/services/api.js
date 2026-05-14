@@ -1,5 +1,19 @@
 import axios from 'axios';
 
+function normalizeApiBaseUrl(value) {
+  if (!value) return '';
+
+  const trimmed = String(value).trim().replace(/\/+$/, '');
+
+  // If the user provides an absolute backend origin like `https://x.onrender.com`
+  // (common when first deploying), automatically target the API prefix.
+  if (/^https?:\/\//i.test(trimmed) && !/\/api$/i.test(trimmed)) {
+    return `${trimmed}/api`;
+  }
+
+  return trimmed;
+}
+
 function getDefaultApiBaseUrl() {
   // CRA dev server uses package.json "proxy" so relative `/api` works.
   if (process.env.NODE_ENV === 'development') return '/api';
@@ -16,7 +30,8 @@ function getDefaultApiBaseUrl() {
   return '/api';
 }
 
-export const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || getDefaultApiBaseUrl();
+export const API_BASE_URL =
+  normalizeApiBaseUrl(process.env.REACT_APP_API_BASE_URL) || getDefaultApiBaseUrl();
 
 const api = axios.create({
   baseURL: API_BASE_URL,

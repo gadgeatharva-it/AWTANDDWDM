@@ -1,5 +1,12 @@
+const fs = require('fs');
 const path = require('path');
-require('dotenv').config({ path: path.join(__dirname, '.env') });
+
+// Local dev convenience: load `backend/.env` if present.
+// In Render (and most deployments), environment variables are provided by the platform.
+const envPath = path.join(__dirname, '.env');
+if (process.env.NODE_ENV !== 'production' && fs.existsSync(envPath)) {
+  require('dotenv').config({ path: envPath });
+}
 const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
@@ -14,7 +21,7 @@ const app = express();
 
 // Security middleware
 const corsOptions =
-  process.env.NODE_ENV === 'production'
+  process.env.NODE_ENV === 'production' && process.env.CLIENT_URL
     ? { origin: process.env.CLIENT_URL, credentials: true }
     : { origin: true, credentials: true };
 app.use(cors(corsOptions));
