@@ -61,5 +61,14 @@ If you host the frontend on Netlify and the backend on Render, you must point th
 
 The frontend will call `https://<your-backend>.onrender.com/api/...` automatically.
 
+### Netlify SPA routing (React Router refresh)
+Add a Netlify redirect so refreshing `/app/...` routes doesn’t 404:
+- File: `frontend/public/_redirects`
+- Contents: `/* /index.html 200`
+
+If you deploy from a monorepo, ensure Netlify is building/publishing the `frontend` app. This repo includes `netlify.toml` at the root to set:
+- Base directory: `frontend`
+- Publish directory: `build`
+
 ### Render backend env
 - Set `CLIENT_URL` to your Netlify site URL (e.g. `https://<your-site>.netlify.app`) if you want strict CORS.
