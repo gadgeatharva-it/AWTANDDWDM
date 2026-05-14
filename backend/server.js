@@ -20,11 +20,33 @@ const questionRoutes = require('./routes/questions');
 const app = express();
 
 // Security middleware
-const corsOptions =
+function normalizeOrigin(value) {
+  return String(value || '')
+    .trim()
+    .replace(/\/+$/, '');
+}
+
+const allowedOrigins =
   process.env.NODE_ENV === 'production' && process.env.CLIENT_URL
-    ? { origin: process.env.CLIENT_URL, credentials: true }
-    : { origin: true, credentials: true };
-app.use(cors(corsOptions));
+    ? process.env.CLIENT_URL.split(',').map(normalizeOrigin).filter(Boolean)
+    : null;
+
+app.use(
+  cors({
+    credentials: true,
+    origin(origin, callback) {
+      // Allow non-browser requests (curl/postman) with no Origin header.
+      if (!origin) return callback(null, true);
+
+      if (!allowedOrigins) return callback(null, true);
+
+      const normalized = normalizeOrigin(origin);
+      if (allowedOrigins.includes(normalized)) return callback(null, true);
+
+      return callback(new Error(`CORS blocked for origin: ${origin}`));
+    },
+  })
+);
 app.use(express.json({ limit: '10kb' }));
 
 // Routes
