@@ -28,12 +28,32 @@ export default function EventCard({ event, onEdit, onDelete }) {
   const fillPct = event.capacity > 0 ? Math.min(100, Math.round((event.registeredCount / event.capacity) * 100)) : 0;
   const sc = statusColors[event.status] || statusColors.draft;
 
+  const cardClickable = typeof event?.onClick === 'function';
+
   return (
-    <div style={{
+    <div
+      onClick={(e) => {
+        if (!cardClickable) return;
+        if (e.target.closest('button')) return;
+        event.onClick(event);
+      }}
+      role={cardClickable ? 'button' : undefined}
+      tabIndex={cardClickable ? 0 : undefined}
+      onKeyDown={(e) => {
+        if (!cardClickable) return;
+        if (e.key !== 'Enter' && e.key !== ' ') return;
+        e.preventDefault();
+        event.onClick(event);
+      }}
+      style={{
       background: theme.surface, borderRadius: 12, border: `1px solid ${theme.border}`,
       padding: isMobile ? 16 : 20, display: 'flex', flexDirection: 'column', gap: 12,
       boxShadow: theme.cardShadow, transition: 'all 0.3s',
-    }}>
+      height: '100%',
+      cursor: cardClickable ? 'pointer' : 'default',
+      outline: 'none',
+    }}
+    >
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
         <div style={{ minWidth: 0 }}>
           <span style={{
@@ -75,7 +95,7 @@ export default function EventCard({ event, onEdit, onDelete }) {
       </div>
 
       {showActions && (
-        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 8, marginTop: 4 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 8, marginTop: 'auto' }}>
           <button onClick={() => onEdit(event)} style={{
             padding: '8px 0', borderRadius: 8, border: `1px solid ${theme.inputBorder}`,
             background: theme.surface, color: theme.textSecondary, fontWeight: 500, fontSize: 13, cursor: 'pointer',
@@ -92,7 +112,7 @@ export default function EventCard({ event, onEdit, onDelete }) {
       )}
 
       {canRegister && !showActions && (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 8, marginTop: 4 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 8, marginTop: 'auto' }}>
           {isRegistered ? (
             <button
               onClick={() => event.onCancelRegistration?.(event)}

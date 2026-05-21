@@ -1,6 +1,7 @@
 const Question = require('../models/Question');
 const Event = require('../models/Event');
 const Registration = require('../models/Registration');
+const User = require('../models/User');
 
 // POST /api/questions — attendee asks organiser (must be registered)
 exports.createQuestion = async (req, res, next) => {
@@ -15,6 +16,10 @@ exports.createQuestion = async (req, res, next) => {
     const event = await Event.findById(eventId).select('organiser title status').lean();
     if (!event) return res.status(404).json({ message: 'Event not found' });
     if (event.status === 'cancelled') return res.status(400).json({ message: 'Event is cancelled' });
+    if (!event.organiser) return res.status(400).json({ message: 'Event has no organiser configured' });
+
+    const organiserExists = await User.exists({ _id: event.organiser });
+    if (!organiserExists) return res.status(400).json({ message: 'Event organiser account no longer exists' });
 
     const registration = await Registration.findOne({ event: eventId, attendee: req.user.id, status: 'confirmed' }).select('_id');
     if (!registration) return res.status(403).json({ message: 'You must be registered for this event to ask a question' });
@@ -73,9 +78,15 @@ exports.getInbox = async (req, res, next) => {
     const skip = (safePage - 1) * safeLimit;
 
     const filter = {};
-    if (req.user.role !== 'admin') filter.organiser = req.user.id;
     if (status) filter.status = status;
     if (eventId) filter.event = eventId;
+
+    // Use Events as the source of truth for organiser ownership so inbox
+    // still works even if `Question.organiser` is missing/incorrect.
+    if (req.user.role !== 'admin') {
+      const myEventIds = await Event.find({ organiser: req.user.id }).distinct('_id');
+      filter.event = filter.event ? filter.event : { $in: myEventIds };
+    }
 
     const [questions, total] = await Promise.all([
       Question.find(filter)
@@ -104,8 +115,12 @@ exports.answerQuestion = async (req, res, next) => {
     const question = await Question.findById(req.params.id);
     if (!question) return res.status(404).json({ message: 'Question not found' });
 
-    if (req.user.role !== 'admin' && String(question.organiser) !== String(req.user.id)) {
-      return res.status(403).json({ message: 'Not authorised' });
+    if (req.user.role !== 'admin') {
+      const event = await Event.findById(question.event).select('organiser').lean();
+      if (!event) return res.status(404).json({ message: 'Event not found' });
+      if (!event.organiser || String(event.organiser) !== String(req.user.id)) {
+        return res.status(403).json({ message: 'Not authorised' });
+      }
     }
 
     question.answer = String(answer).trim();
@@ -122,4 +137,3 @@ exports.answerQuestion = async (req, res, next) => {
     next(err);
   }
 };
-

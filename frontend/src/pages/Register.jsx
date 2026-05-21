@@ -22,8 +22,9 @@ export default function Register() {
       return;
     }
     try {
-      await register(name, email, password, 'attendee');
-      toast.success('Account created!');
+      const newUser = await register(name, email, password, 'attendee');
+      const firstName = newUser?.name?.split(' ')?.[0] || newUser?.name || '';
+      toast.success(`Welcome, ${firstName}!`);
       navigate('/app/dashboard');
     } catch (err) {
       toast.error(err.message || 'Registration failed');

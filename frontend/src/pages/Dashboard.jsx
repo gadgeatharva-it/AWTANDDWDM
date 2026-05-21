@@ -9,6 +9,8 @@ import { useDarkMode } from '../context/DarkModeContext';
 import { useToast } from '../context/ToastContext';
 import EventCard from '../components/EventCard';
 import useViewport from '../hooks/useViewport';
+import EventDetailsModal from '../components/EventDetailsModal';
+import { useEventDetailsModal } from '../hooks/useEventDetailsModal';
 
 const COLORS = ['#6366f1', '#f59e0b', '#10b981', '#ec4899', '#06b6d4', '#f97316', '#8b5cf6'];
 const MONTHS = [
@@ -89,9 +91,11 @@ export default function Dashboard() {
   const { toast } = useToast();
   const { theme } = useDarkMode();
   const { isMobile, isTablet } = useViewport();
+  const detailsModal = useEventDetailsModal();
   const showAdvancedAnalytics = user?.role !== 'attendee';
   const quote = QUOTES[new Date().getDay() % QUOTES.length];
   const [filters, setFilters] = useState({ year: '', month: '', category: '', status: '', drill: 'month' });
+  const firstName = user?.name?.split(' ')?.[0] || user?.name || '';
 
   useEffect(() => {
     fetchStats(filters);
@@ -170,7 +174,9 @@ export default function Dashboard() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
       <div style={{ background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)', borderRadius: 14, padding: isMobile ? '18px 16px' : '22px 28px', color: '#fff' }}>
-        <h2 style={{ margin: 0, fontSize: isMobile ? 18 : 20, fontWeight: 700 }}>Welcome back, {user?.name?.split(' ')[0]} 👋</h2>
+        <h2 style={{ margin: 0, fontSize: isMobile ? 18 : 20, fontWeight: 700 }}>
+          Welcome, {firstName} 👋
+        </h2>
         <p style={{ margin: '6px 0 0', opacity: 0.85, fontSize: 14 }}>"{quote}"</p>
       </div>
 
@@ -384,12 +390,23 @@ export default function Dashboard() {
                   isRegistered: registeredIds.has(event._id),
                   onRegister: handleRegister,
                   onCancelRegistration: handleCancelRegistration,
+                  onClick: detailsModal.openForEvent,
                 }}
               />
             ))}
           </div>
         )}
       </Panel>
+
+      <EventDetailsModal
+        {...detailsModal.modalProps}
+        onShare={(e) => {
+          const url = `${window.location.origin}/app/events`;
+          const text = `${e.title} • ${new Date(e.startDate).toLocaleDateString()} • ${e.location || 'Online'}\n${url}`;
+          navigator.clipboard?.writeText?.(text);
+          toast.success('Copied event info');
+        }}
+      />
     </div>
   );
 }

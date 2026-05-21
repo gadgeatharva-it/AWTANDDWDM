@@ -4,7 +4,12 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "nodemon server.js"
+    "dev": "nodemon server.js",
+    "trim:events:dry": "node scripts/trim-events.js",
+    "trim:events": "node scripts/trim-events.js --apply",
+    "repair:organisers:dry": "node scripts/repair-orphaned-organisers.js",
+    "repair:organisers": "node scripts/repair-orphaned-organisers.js --apply",
+    "seed:ieee": "node scripts/add-ieee-conferences.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

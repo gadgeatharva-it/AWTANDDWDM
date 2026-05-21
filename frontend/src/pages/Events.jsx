@@ -5,8 +5,10 @@ import { useToast } from '../context/ToastContext';
 import { useDarkMode } from '../context/DarkModeContext';
 import EventCard from '../components/EventCard';
 import EventModal from '../components/EventModal';
+import EventDetailsModal from '../components/EventDetailsModal';
 import { LoadingSpinner } from '../components/ProtectedRoute';
 import useViewport from '../hooks/useViewport';
+import { useEventDetailsModal } from '../hooks/useEventDetailsModal';
 
 const CATEGORIES = ['', 'conference', 'workshop', 'webinar', 'meetup', 'concert', 'sports', 'other'];
 const STATUSES = ['', 'draft', 'published', 'cancelled', 'completed'];
@@ -40,8 +42,11 @@ export default function Events() {
   const [filters, setFilters] = useState({ search: '', category: '', status: '', sort: '-createdAt', page: 1 });
   const [modalOpen, setModalOpen] = useState(false);
   const [editingEvent, setEditingEvent] = useState(null);
+  const detailsModal = useEventDetailsModal();
 
   const canCreate = user?.role === 'organiser' || user?.role === 'admin';
+
+  const pageLimit = isMobile ? 10 : isTablet ? 10 : 12;
 
   const load = useCallback(() => {
     const params = {};
@@ -50,13 +55,18 @@ export default function Events() {
     if (filters.status) params.status = filters.status;
     params.sort = filters.sort;
     params.page = filters.page;
+    params.limit = pageLimit;
     fetchEvents(params);
-  }, [filters, fetchEvents]);
+  }, [filters, fetchEvents, pageLimit]);
 
   useEffect(() => { load(); }, [load]);
   useEffect(() => {
     if (user?.role === 'attendee') fetchMyRegistrations();
   }, [fetchMyRegistrations, user?.role]);
+
+  useEffect(() => {
+    setFilters((f) => ({ ...f, page: 1 }));
+  }, [pageLimit]);
 
   const handleFilterChange = (key, value) => setFilters((f) => ({ ...f, [key]: value, page: 1 }));
 
@@ -88,6 +98,7 @@ export default function Events() {
   };
 
   const handleEdit = (event) => { setEditingEvent(event); setModalOpen(true); };
+  const handleCardClick = (event) => detailsModal.openForEvent(event);
   const registeredIds = new Set(myRegistrations.map((registration) => registration.event?._id));
 
   const handleRegister = async (event) => {
@@ -177,6 +188,7 @@ export default function Events() {
                 isRegistered: registeredIds.has(event._id),
                 onRegister: handleRegister,
                 onCancelRegistration: handleCancelRegistration,
+                onClick: handleCardClick,
               }}
               onEdit={handleEdit}
               onDelete={handleDelete}
@@ -205,6 +217,18 @@ export default function Events() {
           onClose={() => { setModalOpen(false); setEditingEvent(null); }}
         />
       )}
+
+      <EventDetailsModal
+        {...detailsModal.modalProps}
+        onEdit={(e) => { detailsModal.close(); handleEdit(e); }}
+        onDelete={(id) => { detailsModal.close(); handleDelete(id); }}
+        onShare={(e) => {
+          const url = `${window.location.origin}/app/events`;
+          const text = `${e.title} • ${new Date(e.startDate).toLocaleDateString()} • ${e.location || 'Online'}\n${url}`;
+          navigator.clipboard?.writeText?.(text);
+          toast.success('Copied event info');
+        }}
+      />
     </div>
   );
 }

@@ -21,8 +21,9 @@ export default function Login() {
       return;
     }
     try {
-      await login(email, password);
-      toast.success('Welcome back!');
+      const loggedInUser = await login(email, password);
+      const firstName = loggedInUser?.name?.split(' ')?.[0] || loggedInUser?.name || '';
+      toast.success(`Welcome, ${firstName}!`);
       navigate('/app/dashboard');
     } catch (err) {
       toast.error(err.message || 'Login failed');
