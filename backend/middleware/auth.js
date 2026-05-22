@@ -14,11 +14,17 @@ exports.protect = async (req, res, next) => {
     const user = await User.findById(decoded.id);
     if (!user) return res.status(401).json({ message: 'User no longer exists' });
     if (user.isActive === false) return res.status(401).json({ message: 'Account is deactivated' });
+    if (user.passwordChangedAt && decoded.iat * 1000 < new Date(user.passwordChangedAt).getTime()) {
+      return res.status(401).json({ message: 'Password changed recently. Please log in again.' });
+    }
 
     req.user = { id: user._id.toString(), role: user.role, name: user.name };
     next();
   } catch (err) {
-    return res.status(401).json({ message: 'Invalid or expired token' });
+    if (err?.name === 'TokenExpiredError') {
+      return res.status(401).json({ message: 'Token expired. Please log in again.' });
+    }
+    return res.status(401).json({ message: 'Invalid token. Please log in again.' });
   }
 };
 

@@ -53,6 +53,12 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
+  const setSession = useCallback(({ token, user }) => {
+    if (!token || !user) return;
+    saveAuth({ token, user });
+    setUser(user);
+  }, []);
+
   useEffect(() => {
     let cancelled = false;
 
@@ -89,8 +95,7 @@ export function AuthProvider({ children }) {
         email: email.trim().toLowerCase(),
         password,
       });
-      saveAuth({ token: data.token, user: data.user });
-      setUser(data.user);
+      setSession({ token: data.token, user: data.user });
       return data.user;
     } catch (err) {
       const msg = getAuthErrorMessage(err, 'Login failed');
@@ -99,7 +104,7 @@ export function AuthProvider({ children }) {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [setSession]);
 
   const register = useCallback(async (name, email, password, role) => {
     setLoading(true);
@@ -111,9 +116,10 @@ export function AuthProvider({ children }) {
         password,
         role,
       });
-      saveAuth({ token: data.token, user: data.user });
-      setUser(data.user);
-      return data.user;
+      if (data?.token && data?.user) {
+        setSession({ token: data.token, user: data.user });
+      }
+      return data;
     } catch (err) {
       const msg = getAuthErrorMessage(err, 'Registration failed');
       setError(msg);
@@ -121,15 +127,20 @@ export function AuthProvider({ children }) {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [setSession]);
 
-  const logout = useCallback(() => {
+  const logout = useCallback(async () => {
+    try {
+      await authService.logout();
+    } catch {
+      // ignore
+    }
     clearSavedAuth();
     setUser(null);
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, initializing, loading, error, login, register, logout, isAuthenticated: !!user }}>
+    <AuthContext.Provider value={{ user, initializing, loading, error, login, register, logout, setSession, isAuthenticated: !!user }}>
       {children}
     </AuthContext.Provider>
   );

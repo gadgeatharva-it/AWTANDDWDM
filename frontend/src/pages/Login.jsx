@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { useDarkMode } from '../context/DarkModeContext';
@@ -11,8 +11,15 @@ export default function Login() {
   const { login, loading, error } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const location = useLocation();
   const { theme } = useDarkMode();
   const { isMobile } = useViewport();
+
+  // Prefill email after register / other flows.
+  useEffect(() => {
+    const prefill = location.state?.email;
+    if (typeof prefill === 'string' && prefill.trim()) setEmail(prefill.trim());
+  }, [location.state]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -79,6 +86,12 @@ export default function Login() {
           Don&apos;t have an account?{' '}
           <Link to="/register" style={{ color: '#6366f1', fontWeight: 600, textDecoration: 'none' }}>Register</Link>
         </p>
+
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8, fontSize: 13 }}>
+          <Link to="/forgot-password" style={{ color: '#6366f1', textDecoration: 'none', fontWeight: 600 }}>
+            Forgot password?
+          </Link>
+        </div>
       </div>
     </div>
   );

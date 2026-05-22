@@ -22,10 +22,9 @@ export default function Register() {
       return;
     }
     try {
-      const newUser = await register(name, email, password, 'attendee');
-      const firstName = newUser?.name?.split(' ')?.[0] || newUser?.name || '';
-      toast.success(`Welcome, ${firstName}!`);
-      navigate('/app/dashboard');
+      const result = await register(name, email, password, 'attendee');
+      toast.success(result?.message || 'Account created. You can now log in.');
+      navigate('/login', { state: { email: email.trim().toLowerCase() } });
     } catch (err) {
       toast.error(err.message || 'Registration failed');
     }
