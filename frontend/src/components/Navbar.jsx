@@ -37,17 +37,52 @@ export default function Navbar({ onMenuClick }) {
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
         {!isMobile && <span style={{ fontSize: 13, color: theme.textFaint }}>{dark ? 'Dark' : 'Light'}</span>}
-        <button onClick={toggle} style={{
-          width: 44, height: 24, borderRadius: 12, border: 'none', cursor: 'pointer', padding: 2,
-          background: dark ? '#6366f1' : '#d1d5db', transition: 'background 0.2s',
-          display: 'flex', alignItems: 'center',
-        }}>
+        <span
+          aria-hidden="true"
+          title="Light mode"
+          style={{
+            fontSize: 14,
+            lineHeight: 1,
+            color: dark ? theme.textFaint : theme.text,
+            userSelect: 'none',
+          }}
+        >
+          ☀
+        </span>
+        <button
+          onClick={toggle}
+          aria-label={dark ? 'Switch to light mode' : 'Switch to dark mode'}
+          style={{
+            width: 44,
+            height: 24,
+            borderRadius: 12,
+            border: 'none',
+            cursor: 'pointer',
+            padding: 2,
+            background: dark ? '#6366f1' : '#d1d5db',
+            transition: 'background 0.2s',
+            display: 'flex',
+            alignItems: 'center',
+          }}
+        >
           <div style={{
             width: 20, height: 20, borderRadius: '50%', background: '#fff',
             transform: dark ? 'translateX(20px)' : 'translateX(0)',
             transition: 'transform 0.2s',
           }} />
         </button>
+        <span
+          aria-hidden="true"
+          title="Dark mode"
+          style={{
+            fontSize: 14,
+            lineHeight: 1,
+            color: dark ? theme.text : theme.textFaint,
+            userSelect: 'none',
+          }}
+        >
+          ☾
+        </span>
       </div>
     </header>
   );
