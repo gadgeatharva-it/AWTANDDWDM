@@ -8,7 +8,6 @@ import AppLayout from './components/AppLayout';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import ForgotPassword from './pages/ForgotPassword';
-import ResetPassword from './pages/ResetPassword';
 import ResetPasswordInvalid from './pages/ResetPasswordInvalid';
 import Dashboard from './pages/Dashboard';
 import Events from './pages/Events';
@@ -32,7 +31,7 @@ export default function App() {
                 <Route path="/register" element={<Register />} />
                 <Route path="/forgot-password" element={<ForgotPassword />} />
                 <Route path="/reset-password" element={<ResetPasswordInvalid />} />
-                <Route path="/reset-password/:token" element={<ResetPassword />} />
+                <Route path="/reset-password/:token" element={<ResetPasswordInvalid />} />
                 <Route
                   path="/app"
                   element={

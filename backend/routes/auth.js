@@ -1,5 +1,5 @@
 const express = require('express');
-const { body, param } = require('express-validator');
+const { body } = require('express-validator');
 const { register, login, getMe, forgotPassword, resetPassword, logout } = require('../controllers/authController');
 const { protect } = require('../middleware/auth');
 const validate = require('../middleware/validate');
@@ -31,9 +31,16 @@ router.post('/logout', protect, logout);
 
 router.post('/forgot-password', passwordLimiter, [body('email').trim().isEmail().withMessage('Valid email is required').normalizeEmail()], validate, forgotPassword);
 router.post(
-  '/reset-password/:token',
+  '/reset-password',
   passwordLimiter,
-  [param('token').notEmpty().withMessage('Token is required'), body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters')],
+  [
+    body('email').trim().isEmail().withMessage('Valid email is required').normalizeEmail(),
+    body('otp')
+      .customSanitizer((value) => String(value ?? '').trim())
+      .isLength({ min: 6, max: 6 })
+      .withMessage('OTP is required'),
+    body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
+  ],
   validate,
   resetPassword
 );

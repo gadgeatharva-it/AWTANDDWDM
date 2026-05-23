@@ -2,7 +2,7 @@ const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const User = require('../models/User');
 const { sendEmail } = require('../utils/email');
-const { passwordResetEmailTemplate } = require('../utils/emailTemplates');
+const { passwordResetOtpEmailTemplate } = require('../utils/emailTemplates');
 
 const signToken = (id) =>
   jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -27,11 +27,11 @@ function buildClientUrl(pathname) {
 
 async function sendPasswordResetEmail({ user, rawToken }) {
   const appName = process.env.APP_NAME || 'EventFlow';
-  const resetUrl = buildClientUrl(`/reset-password/${rawToken}`);
+  const expiresMinutes = 10;
   await sendEmail({
     to: user.email,
-    subject: `Reset your password - ${appName}`,
-    html: passwordResetEmailTemplate({ appName, resetUrl }),
+    subject: `Password reset code - ${appName}`,
+    html: passwordResetOtpEmailTemplate({ appName, otp: rawToken, expiresMinutes }),
   });
 }
 
@@ -93,38 +93,40 @@ exports.forgotPassword = async (req, res, next) => {
     if (!email) return res.status(400).json({ message: 'Valid email is required' });
 
     const user = await User.findOne({ email });
-    if (!user) return res.json({ message: 'If the account exists, a reset email has been sent.' });
+    if (!user) return res.json({ message: 'If the account exists, a reset code has been sent.' });
 
-    const rawToken = crypto.randomBytes(32).toString('hex');
+    const rawToken = String(Math.floor(100000 + Math.random() * 900000)); // 6-digit OTP
     user.passwordResetToken = sha256(rawToken);
-    user.passwordResetExpires = new Date(Date.now() + 30 * 60 * 1000); // 30 minutes
+    user.passwordResetExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
     await user.save();
 
     await sendPasswordResetEmail({ user, rawToken });
 
-    res.json({ message: 'If the account exists, a reset email has been sent.' });
+    res.json({ message: 'If the account exists, a reset code has been sent.' });
   } catch (err) {
     next(err);
   }
 };
 
-// POST /api/auth/reset-password/:token
+// POST /api/auth/reset-password
 exports.resetPassword = async (req, res, next) => {
   try {
-    const rawToken = String(req.params.token || '').trim();
-    const cleanToken = rawToken.replace(/[^a-f0-9]/gi, '');
+    const email = typeof req.body?.email === 'string' ? req.body.email.trim().toLowerCase() : '';
+    const rawToken = typeof req.body?.otp === 'string' || typeof req.body?.otp === 'number' ? String(req.body.otp).trim() : '';
     const newPassword = typeof req.body?.password === 'string' ? req.body.password : '';
 
-    if (!cleanToken) return res.status(400).json({ message: 'Invalid reset token' });
+    if (!email) return res.status(400).json({ message: 'Valid email is required' });
+    if (!/^\d{6}$/.test(rawToken)) return res.status(400).json({ message: 'Invalid OTP code' });
     if (newPassword.length < 6) return res.status(400).json({ message: 'Password must be at least 6 characters' });
 
-    const hashed = sha256(cleanToken);
+    const hashed = sha256(rawToken);
     const user = await User.findOne({
+      email,
       passwordResetToken: hashed,
       passwordResetExpires: { $gt: new Date() },
     }).select('+passwordResetToken +passwordResetExpires');
 
-    if (!user) return res.status(400).json({ message: 'Reset token is invalid or has expired' });
+    if (!user) return res.status(400).json({ message: 'OTP code is invalid or has expired' });
 
     user.password = newPassword;
     user.passwordResetToken = undefined;

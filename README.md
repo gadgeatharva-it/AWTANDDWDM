@@ -37,6 +37,8 @@ Deploy backend and frontend as two separate services.
   - `JWT_SECRET=<strong secret>`
   - `JWT_EXPIRES_IN=7d`
   - `CLIENT_URL=<your frontend URL>`
+  - `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS` (required for OTP password reset emails)
+  - `SMTP_FROM=<optional from address>`
 
 ### 2) Frontend (Render Static Site)
 - Root directory: `frontend`
@@ -62,7 +64,7 @@ If you host the frontend on Netlify and the backend on Render, you must point th
 The frontend will call `https://<your-backend>.onrender.com/api/...` automatically.
 
 ### Netlify SPA routing (React Router refresh)
-Add a Netlify redirect so refreshing `/app/...` routes doesn’t 404:
+Add a Netlify redirect so refreshing `/app/...` routes doesn't 404:
 - File: `frontend/public/_redirects`
 - Contents: `/* /index.html 200`
 
