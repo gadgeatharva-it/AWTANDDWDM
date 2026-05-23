@@ -58,18 +58,3 @@ exports.passwordResetEmailTemplate = ({ appName, resetUrl }) => {
     ctaText: 'Reset password',
   });
 };
-
-exports.passwordResetOtpEmailTemplate = ({ appName, otp, expiresMinutes }) => {
-  const title = `Your password reset code for ${appName || 'your account'}`;
-  const safeOtp = String(otp || '').trim();
-  const safeMinutes = Number.isFinite(Number(expiresMinutes)) ? Number(expiresMinutes) : 10;
-
-  return baseTemplate({
-    title,
-    preheader: 'Use this code to reset your password.',
-    bodyHtml: `<p class="p">We received a request to reset your password. If you didn’t request this, you can ignore this email.</p>
-<p class="p">Enter this code in the app to continue:</p>
-<p class="p" style="font-size:22px; font-weight:700; letter-spacing:2px; margin: 12px 0 0;"><span class="code">${safeOtp}</span></p>
-<p class="p" style="margin-top: 12px;">This code expires in ${safeMinutes} minutes.</p>`,
-  });
-};
