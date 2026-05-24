@@ -14,7 +14,7 @@ export default function Sidebar({ open, onClose }) {
   const { toast } = useToast();
   const navigate = useNavigate();
   const { dark, theme } = useDarkMode();
-  const { isDesktop } = useViewport();
+  const { isMobile, isDesktop } = useViewport();
 
   const showActivityLogs = user?.role === 'organiser' || user?.role === 'admin';
   const showQandA = Boolean(user);
@@ -42,7 +42,7 @@ export default function Sidebar({ open, onClose }) {
     display: 'flex',
     alignItems: 'center',
     gap: 10,
-    padding: '10px 16px',
+    padding: isMobile ? '12px 16px' : '10px 16px',
     borderRadius: 8,
     textDecoration: 'none',
     fontWeight: 500,
@@ -63,7 +63,8 @@ export default function Sidebar({ open, onClose }) {
         top: 0,
         left: 0,
         height: '100vh',
-        width: 240,
+        width: isMobile ? '84vw' : 240,
+        maxWidth: isMobile ? 280 : undefined,
         background: theme.sidebarBg,
         borderRight: `1px solid ${theme.border}`,
         display: 'flex',
