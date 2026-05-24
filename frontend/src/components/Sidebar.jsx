@@ -19,6 +19,7 @@ export default function Sidebar({ open, onClose }) {
   const showActivityLogs = user?.role === 'organiser' || user?.role === 'admin';
   const showQandA = Boolean(user);
   const showAttendeeExtras = user?.role === 'attendee';
+  const showExecutiveExport = user?.role === 'organiser';
 
   const navItems = [
     ...baseNavItems,
@@ -27,6 +28,7 @@ export default function Sidebar({ open, onClose }) {
     ...(showAttendeeExtras ? [{ to: '/app/notifications', label: 'Notifications', icon: '🔔' }] : []),
     ...(showActivityLogs ? [{ to: '/app/activity', label: 'Activity Logs', icon: '📜' }] : []),
     ...(showActivityLogs ? [{ to: '/app/users', label: 'Users', icon: '👥' }] : []),
+    ...(showExecutiveExport ? [{ to: '/app/export/executive-summary', label: 'Export Executive Summary', icon: '📤' }] : []),
     ...(showQandA ? [{ to: '/app/qa', label: 'Q&A', icon: '💬' }] : []),
   ];
 

@@ -14,6 +14,7 @@ import Dashboard from './pages/Dashboard';
 import Events from './pages/Events';
 import ActivityLogs from './pages/ActivityLogs';
 import Users from './pages/Users';
+import ExportExecutiveSummary from './pages/ExportExecutiveSummary';
 import QandA from './pages/QandA';
 import MyRegisteredEvents from './pages/MyRegisteredEvents';
 import UpcomingEvents from './pages/UpcomingEvents';
@@ -46,6 +47,7 @@ export default function App() {
                   <Route path="events" element={<Events />} />
                   <Route path="activity" element={<ActivityLogs />} />
                   <Route path="users" element={<Users />} />
+                  <Route path="export/executive-summary" element={<ExportExecutiveSummary />} />
                   <Route path="my-events" element={<MyRegisteredEvents />} />
                   <Route path="upcoming" element={<UpcomingEvents />} />
                   <Route path="notifications" element={<Notifications />} />

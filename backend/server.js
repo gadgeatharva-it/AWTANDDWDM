@@ -17,6 +17,7 @@ const eventRoutes = require('./routes/events');
 const registrationRoutes = require('./routes/registrations');
 const userRoutes = require('./routes/users');
 const questionRoutes = require('./routes/questions');
+const exportRoutes = require('./routes/export');
 
 const app = express();
 
@@ -57,6 +58,7 @@ app.use('/api/events', eventRoutes);
 app.use('/api/registrations', registrationRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/questions', questionRoutes);
+app.use('/api/export', exportRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
