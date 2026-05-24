@@ -19,7 +19,9 @@ export default function Users() {
   const { isMobile } = useViewport();
 
   const canView = user?.role === 'organiser' || user?.role === 'admin';
-  const canManage = user?.role === 'admin';
+  const canManageAll = user?.role === 'admin';
+  const canManageAttendees = user?.role === 'organiser';
+  const canManage = canManageAll || canManageAttendees;
 
   const [loading, setLoading] = useState(false);
   const [rows, setRows] = useState([]);
@@ -48,14 +50,24 @@ export default function Users() {
 
   useEffect(() => { load(); }, [load]);
 
-  const items = useMemo(() => rows.map((u) => ({
-    id: u?._id,
-    name: u?.name || '—',
-    email: u?.email || '—',
-    role: u?.role || '—',
-    isActive: u?.isActive !== false,
-    createdAt: formatDate(u?.createdAt),
-  })), [rows]);
+  const items = useMemo(() => rows.map((u) => {
+    const role = u?.role || '—';
+    const id = u?._id;
+    const isSelf = Boolean(id && user?.id && String(id) === String(user.id));
+    const isActive = u?.isActive !== false;
+    const canToggle = !isSelf && (canManageAll || (canManageAttendees && role === 'attendee'));
+
+    return {
+      id,
+      name: u?.name || '—',
+      email: u?.email || '—',
+      role,
+      isActive,
+      createdAt: formatDate(u?.createdAt),
+      canToggle,
+      isSelf,
+    };
+  }), [rows, user?.id, canManageAll, canManageAttendees]);
 
   const selectStyle = {
     padding: '8px 12px',
@@ -114,7 +126,6 @@ export default function Users() {
           <option value="">All roles</option>
           <option value="organiser">Organiser</option>
           <option value="attendee">Attendee</option>
-          <option value="admin">Admin</option>
         </select>
         <select value={filters.active} onChange={(e) => setFilters((f) => ({ ...f, active: e.target.value, page: 1 }))} style={selectStyle}>
           <option value="">All statuses</option>
@@ -194,10 +205,11 @@ export default function Users() {
                 </span>
                 {!isMobile && <span style={{ fontSize: 12, color: theme.textFaint }}>Joined {item.createdAt}</span>}
               </div>
-              {canManage && (
+              {canManage && (canManageAll || item.canToggle) && (
                 <div style={{ display: 'flex', justifyContent: isMobile ? 'flex-start' : 'flex-end', marginTop: isMobile ? 10 : 0 }}>
                   <button
                     onClick={() => handleToggleActive(item.id, !item.isActive)}
+                    disabled={!item.canToggle}
                     style={{
                       padding: '8px 12px',
                       borderRadius: 8,
@@ -206,7 +218,8 @@ export default function Users() {
                       color: theme.text,
                       fontWeight: 700,
                       fontSize: 12.5,
-                      cursor: 'pointer',
+                      cursor: item.canToggle ? 'pointer' : 'not-allowed',
+                      opacity: item.canToggle ? 1 : 0.55,
                     }}
                   >
                     {item.isActive ? 'Deactivate' : 'Activate'}
@@ -245,4 +258,3 @@ export default function Users() {
     </div>
   );
 }
-

@@ -58,6 +58,9 @@ exports.setUserActive = async (req, res, next) => {
     const user = await User.findById(req.params.id);
     if (!user) return res.status(404).json({ message: 'User not found' });
     if (user.role === 'admin') return res.status(403).json({ message: 'Admin accounts cannot be changed' });
+    if (req.user.role === 'organiser' && user.role !== 'attendee') {
+      return res.status(403).json({ message: 'Organisers can only manage attendee accounts' });
+    }
 
     user.isActive = nextActive;
     await user.save();
@@ -74,4 +77,3 @@ exports.setUserActive = async (req, res, next) => {
     next(err);
   }
 };
-

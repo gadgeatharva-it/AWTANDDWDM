@@ -86,7 +86,7 @@ const notePool = [
   'Registered early for front seats.','Hope to network with speakers.',
   'Interested in the workshop section.','Planning to volunteer too.',
   'First time attending — can\'t wait!','Recommended by a colleague.',
-  'Will need vegetarian meal option.','Bringing my laptop for the hackathon.',
+  'Will need vegetarian meal option.','Bringing my laptop for the Hackathon.',
   'Hope there are good parking facilities.','Registered for the full-day pass.',
   'Interested in the keynote speaker.','Want to learn about new trends.',
   '','','','','', // empty notes are common

@@ -180,12 +180,14 @@ function summarizeClusters(points) {
 // GET /api/events - filter/search/sort
 exports.getEvents = async (req, res, next) => {
   try {
-    const { search, category, status, sort = '-createdAt', page = 1, limit = 10 } = req.query;
+    const { search, category, status, priceType, sort = '-createdAt', page = 1, limit = 10 } = req.query;
 
     const filter = {};
     if (category) filter.category = category;
     if (status) filter.status = status;
     if (search) filter.$text = { $search: search };
+    if (priceType === 'free') filter.price = 0;
+    if (priceType === 'paid') filter.price = { $gt: 0 };
 
     const skip = (Number(page) - 1) * Number(limit);
 

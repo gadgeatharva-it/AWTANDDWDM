@@ -12,6 +12,11 @@ import { useEventDetailsModal } from '../hooks/useEventDetailsModal';
 
 const CATEGORIES = ['', 'conference', 'workshop', 'webinar', 'meetup', 'concert', 'sports', 'other'];
 const STATUSES = ['', 'draft', 'published', 'cancelled', 'completed'];
+const PRICE_TYPES = [
+  { value: '', label: 'All prices' },
+  { value: 'free', label: 'Free' },
+  { value: 'paid', label: 'Paid' },
+];
 const SORTS = [
   { value: '-createdAt', label: 'Newest first' },
   { value: 'createdAt', label: 'Oldest first' },
@@ -39,7 +44,7 @@ export default function Events() {
   const { theme } = useDarkMode();
   const { isMobile, isTablet } = useViewport();
 
-  const [filters, setFilters] = useState({ search: '', category: '', status: '', sort: '-createdAt', page: 1 });
+  const [filters, setFilters] = useState({ search: '', category: '', status: '', priceType: '', sort: '-createdAt', page: 1 });
   const [modalOpen, setModalOpen] = useState(false);
   const [editingEvent, setEditingEvent] = useState(null);
   const detailsModal = useEventDetailsModal();
@@ -53,6 +58,7 @@ export default function Events() {
     if (filters.search) params.search = filters.search;
     if (filters.category) params.category = filters.category;
     if (filters.status) params.status = filters.status;
+    if (filters.priceType) params.priceType = filters.priceType;
     params.sort = filters.sort;
     params.page = filters.page;
     params.limit = pageLimit;
@@ -167,6 +173,9 @@ export default function Events() {
         </select>
         <select value={filters.sort} onChange={(e) => handleFilterChange('sort', e.target.value)} style={selectStyle}>
           {SORTS.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
+        </select>
+        <select value={filters.priceType} onChange={(e) => handleFilterChange('priceType', e.target.value)} style={selectStyle}>
+          {PRICE_TYPES.map((p) => <option key={p.value || 'all'} value={p.value}>{p.label}</option>)}
         </select>
       </div>
 

@@ -77,7 +77,7 @@ export default function EventCard({ event, onEdit, onDelete }) {
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, fontSize: 13, color: theme.textMuted }}>
         <span>{new Date(event.startDate).toLocaleDateString()}</span>
         <span style={{ wordBreak: 'break-word' }}>{event.location}</span>
-        {event.price > 0 && <span>Rs {event.price}</span>}
+        {event.price > 0 ? <span>Rs {event.price}</span> : <span style={{ color: '#10b981', fontWeight: 600 }}>Free</span>}
       </div>
 
       <div>

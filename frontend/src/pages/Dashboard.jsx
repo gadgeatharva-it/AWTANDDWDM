@@ -93,6 +93,7 @@ export default function Dashboard() {
   const { isMobile, isTablet } = useViewport();
   const detailsModal = useEventDetailsModal();
   const showAdvancedAnalytics = user?.role !== 'attendee';
+  const isAttendee = user?.role === 'attendee';
   const quote = QUOTES[new Date().getDay() % QUOTES.length];
   const [filters, setFilters] = useState({ year: '', month: '', category: '', status: '', drill: 'month' });
   const firstName = user?.name?.split(' ')?.[0] || user?.name || '';
@@ -221,7 +222,13 @@ export default function Dashboard() {
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 16 }}>
         <StatCard label="Total Events" value={overview.totalEvents} color="#6366f1" theme={theme} isMobile={isMobile} />
-        <StatCard label="Total Registrations" value={overview.totalRegistrations} color="#10b981" theme={theme} isMobile={isMobile} />
+        <StatCard
+          label={isAttendee ? 'My Registered Events' : 'Total Registrations'}
+          value={isAttendee ? myRegistrations.length : overview.totalRegistrations}
+          color="#10b981"
+          theme={theme}
+          isMobile={isMobile}
+        />
         {showAdvancedAnalytics && (
           <StatCard
             label="Total Revenue"
