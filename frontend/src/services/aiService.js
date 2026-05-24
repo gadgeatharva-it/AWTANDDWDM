@@ -1,6 +1,7 @@
 import axios from "axios";
 
-const API = "http://localhost:5000/api/ai";
+// Use relative path for deployment compatibility
+const API = "/api/ai";
 
 export const attendeeChatAPI = async (message) => {
   const res = await axios.post(`${API}/attendee-chat`, {
