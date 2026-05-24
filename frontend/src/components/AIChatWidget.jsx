@@ -84,8 +84,8 @@ export default function AIChatWidget() {
 
       const endpoint =
         user?.role === 'organiser'
-          ? 'http://localhost:5000/api/ai/organizer-copilot'
-          : 'http://localhost:5000/api/ai/attendee-chat';
+          ? '/api/ai/organizer-copilot'
+          : '/api/ai/attendee-chat';
 
       const payload =
         user?.role === 'organiser'
