@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
+import { attendeeChatAPI, organizerCopilotAPI } from '../services/aiService';
 
 export default function AIChatWidget() {
 
@@ -82,29 +82,16 @@ export default function AIChatWidget() {
 
     try {
 
-      const endpoint =
-        user?.role === 'organiser'
-          ? '/api/ai/organizer-copilot'
-          : '/api/ai/attendee-chat';
-
-      const payload =
-        user?.role === 'organiser'
-          ? {
-              message: userInput,
-              organizerId: user.id,
-            }
-          : {
-              message: userInput,
-            };
-
-      const res = await axios.post(
-        endpoint,
-        payload
-      );
+      let res;
+      if (user?.role === 'organiser') {
+        res = await organizerCopilotAPI(userInput, user.id);
+      } else {
+        res = await attendeeChatAPI(userInput);
+      }
 
       const aiReply = {
         sender: 'ai',
-        text: res.data.reply,
+        text: res.reply,
       };
 
       setMessages((prev) => [

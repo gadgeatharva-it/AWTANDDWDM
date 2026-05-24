@@ -1,10 +1,7 @@
-import axios from "axios";
-
-// Use relative path for deployment compatibility
-const API = "/api/ai";
+import api from "./api";
 
 export const attendeeChatAPI = async (message) => {
-  const res = await axios.post(`${API}/attendee-chat`, {
+  const res = await api.post(`/ai/attendee-chat`, {
     message
   });
 
@@ -15,10 +12,10 @@ export const organizerCopilotAPI = async (
   message,
   organizerId
 ) => {
-  const res = await axios.post(`${API}/organizer-copilot`, {
+  const res = await api.post(`/ai/organizer-copilot`, {
     message,
     organizerId
-    });
+  });
 
   return res.data;
 };
