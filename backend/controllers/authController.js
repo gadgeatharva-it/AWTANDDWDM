@@ -98,9 +98,13 @@ exports.forgotPassword = async (req, res, next) => {
     const rawToken = crypto.randomBytes(32).toString('hex');
     user.passwordResetToken = sha256(rawToken);
     user.passwordResetExpires = new Date(Date.now() + 30 * 60 * 1000); // 30 minutes
-    await user.save();
+    await user.save({ validateBeforeSave: false });
 
-    await sendPasswordResetEmail({ user, rawToken });
+    try {
+      await sendPasswordResetEmail({ user, rawToken });
+    } catch (emailErr) {
+      console.error('Forgot password email failed:', emailErr);
+    }
 
     res.json({ message: 'If the account exists, a reset email has been sent.' });
   } catch (err) {
