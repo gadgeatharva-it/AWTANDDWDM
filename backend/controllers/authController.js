@@ -104,6 +104,10 @@ exports.forgotPassword = async (req, res, next) => {
       await sendPasswordResetEmail({ user, rawToken });
     } catch (emailErr) {
       console.error('Forgot password email failed:', emailErr);
+      // Don't leave a valid reset token in the DB if the email couldn't be sent.
+      user.passwordResetToken = undefined;
+      user.passwordResetExpires = undefined;
+      await user.save({ validateBeforeSave: false });
     }
 
     res.json({ message: 'If the account exists, a reset email has been sent.' });
