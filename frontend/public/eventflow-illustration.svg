@@ -1,0 +1,113 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="720" viewBox="0 0 960 720" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="120" y1="60" x2="840" y2="660" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F3F7FF"/>
+      <stop offset="1" stop-color="#FFFFFF"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="300" y1="130" x2="690" y2="560" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#60A5FA"/>
+      <stop offset="1" stop-color="#3B82F6"/>
+    </linearGradient>
+    <filter id="shadow" x="-40" y="-40" width="1040" height="800" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="20" stdDeviation="18" flood-color="#0F172A" flood-opacity="0.12"/>
+    </filter>
+    <filter id="soft" x="-40" y="-40" width="1040" height="800" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="10" stdDeviation="16" flood-color="#0F172A" flood-opacity="0.10"/>
+    </filter>
+  </defs>
+
+  <!-- Soft panel background -->
+  <g filter="url(#shadow)">
+    <rect x="110" y="60" width="740" height="600" rx="34" fill="url(#bg)"/>
+  </g>
+
+  <!-- Decorative dots -->
+  <g opacity="0.55">
+    <circle cx="210" cy="170" r="6" fill="#60A5FA"/>
+    <circle cx="240" cy="150" r="4" fill="#34D399"/>
+    <circle cx="265" cy="178" r="5" fill="#F59E0B"/>
+    <circle cx="765" cy="165" r="5" fill="#A78BFA"/>
+    <circle cx="735" cy="145" r="4" fill="#FB7185"/>
+  </g>
+
+  <!-- Calendar card -->
+  <g filter="url(#soft)">
+    <rect x="210" y="180" width="280" height="260" rx="22" fill="#FFFFFF" stroke="#E5E7EB"/>
+    <rect x="210" y="180" width="280" height="56" rx="22" fill="url(#accent)"/>
+    <rect x="250" y="164" width="18" height="44" rx="9" fill="#1F2937" opacity="0.18"/>
+    <rect x="430" y="164" width="18" height="44" rx="9" fill="#1F2937" opacity="0.18"/>
+    <text x="238" y="215" font-family="system-ui, -apple-system, Segoe UI, Roboto, Arial" font-size="18" font-weight="700" fill="#FFFFFF">EVENTS</text>
+
+    <!-- Calendar grid -->
+    <g transform="translate(236 260)">
+      <rect x="0" y="0" width="228" height="148" rx="14" fill="#F8FAFC" stroke="#EEF2F7"/>
+      <g fill="#CBD5E1">
+        <rect x="18" y="20" width="32" height="10" rx="5"/>
+        <rect x="62" y="20" width="32" height="10" rx="5"/>
+        <rect x="106" y="20" width="32" height="10" rx="5"/>
+        <rect x="150" y="20" width="32" height="10" rx="5"/>
+      </g>
+      <g fill="#E2E8F0">
+        <rect x="18" y="46" width="32" height="24" rx="8"/>
+        <rect x="62" y="46" width="32" height="24" rx="8"/>
+        <rect x="106" y="46" width="32" height="24" rx="8"/>
+        <rect x="150" y="46" width="32" height="24" rx="8"/>
+        <rect x="18" y="78" width="32" height="24" rx="8"/>
+        <rect x="62" y="78" width="32" height="24" rx="8"/>
+        <rect x="106" y="78" width="32" height="24" rx="8"/>
+        <rect x="150" y="78" width="32" height="24" rx="8"/>
+        <rect x="18" y="110" width="32" height="24" rx="8"/>
+        <rect x="62" y="110" width="32" height="24" rx="8"/>
+        <rect x="106" y="110" width="32" height="24" rx="8"/>
+        <rect x="150" y="110" width="32" height="24" rx="8"/>
+      </g>
+      <!-- Highlight a few event days -->
+      <rect x="62" y="46" width="32" height="24" rx="8" fill="#60A5FA" opacity="0.9"/>
+      <rect x="150" y="78" width="32" height="24" rx="8" fill="#34D399" opacity="0.9"/>
+      <rect x="106" y="110" width="32" height="24" rx="8" fill="#F59E0B" opacity="0.9"/>
+    </g>
+  </g>
+
+  <!-- Ticket card -->
+  <g filter="url(#soft)">
+    <path d="M545 260C545 244.536 557.536 232 573 232H742C757.464 232 770 244.536 770 260V304C755.64 304 744 315.64 744 330C744 344.36 755.64 356 770 356V400C770 415.464 757.464 428 742 428H573C557.536 428 545 415.464 545 400V356C559.36 356 571 344.36 571 330C571 315.64 559.36 304 545 304V260Z" fill="#FFFFFF" stroke="#E5E7EB"/>
+    <rect x="590" y="266" width="130" height="14" rx="7" fill="#0F172A" opacity="0.12"/>
+    <rect x="590" y="292" width="92" height="12" rx="6" fill="#0F172A" opacity="0.10"/>
+    <rect x="590" y="338" width="150" height="12" rx="6" fill="#0F172A" opacity="0.10"/>
+    <rect x="590" y="360" width="110" height="12" rx="6" fill="#0F172A" opacity="0.10"/>
+    <rect x="590" y="382" width="78" height="12" rx="6" fill="#0F172A" opacity="0.10"/>
+    <path d="M740 252V408" stroke="#E5E7EB" stroke-width="2" stroke-dasharray="6 6"/>
+    <rect x="702" y="298" width="52" height="72" rx="10" fill="url(#accent)" opacity="0.9"/>
+    <path d="M716 314H740" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round"/>
+    <path d="M716 332H740" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round" opacity="0.95"/>
+    <path d="M716 350H732" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round" opacity="0.9"/>
+  </g>
+
+  <!-- Location pin + small crowd -->
+  <g transform="translate(0 0)">
+    <!-- Pin -->
+    <path d="M640 468C640 436.967 665.967 411 697 411C728.033 411 754 436.967 754 468C754 505 697 560 697 560C697 560 640 505 640 468Z" fill="#FB7185" opacity="0.95"/>
+    <circle cx="697" cy="468" r="18" fill="#FFFFFF" opacity="0.95"/>
+    <circle cx="697" cy="468" r="9" fill="#FB7185"/>
+
+    <!-- People -->
+    <g opacity="0.95">
+      <circle cx="280" cy="508" r="16" fill="#60A5FA"/>
+      <rect x="255" y="528" width="50" height="52" rx="18" fill="#60A5FA" opacity="0.9"/>
+
+      <circle cx="338" cy="500" r="14" fill="#34D399"/>
+      <rect x="316" y="518" width="44" height="48" rx="16" fill="#34D399" opacity="0.9"/>
+
+      <circle cx="398" cy="510" r="15" fill="#F59E0B"/>
+      <rect x="374" y="530" width="48" height="50" rx="16" fill="#F59E0B" opacity="0.9"/>
+    </g>
+  </g>
+
+  <!-- EventFlow badge -->
+  <g filter="url(#soft)">
+    <rect x="240" y="112" width="210" height="50" rx="16" fill="#FFFFFF" stroke="#EEF2F7"/>
+    <circle cx="268" cy="137" r="10" fill="url(#accent)"/>
+    <text x="290" y="144" font-family="system-ui, -apple-system, Segoe UI, Roboto, Arial" font-size="18" font-weight="800" fill="#111827">EventFlow</text>
+  </g>
+</svg>
+

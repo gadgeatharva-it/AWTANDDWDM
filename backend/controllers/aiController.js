@@ -3,11 +3,34 @@ const OpenAI = require('openai');
 const Event = require('../models/Event');
 const Registration = require('../models/Registration');
 
-const client = new OpenAI({
-  apiKey: process.env.GROQ_API_KEY,
+let cachedClient = null;
 
-  baseURL: 'https://api.groq.com/openai/v1',
-});
+function getAiClient() {
+  if (cachedClient) return cachedClient;
+
+  const groqApiKey = process.env.GROQ_API_KEY;
+  const openaiApiKey =
+    process.env.OPENAI_API_KEY || process.env.OPENAI_ADMIN_KEY;
+
+  const apiKey = groqApiKey || openaiApiKey;
+
+  if (!apiKey) {
+    const err = new Error(
+      'Missing AI credentials. Set `GROQ_API_KEY` (Groq) or `OPENAI_API_KEY` (OpenAI) in environment variables (or backend/.env) and restart the server.'
+    );
+    err.status = 500;
+    throw err;
+  }
+
+  cachedClient = groqApiKey
+    ? new OpenAI({
+        apiKey,
+        baseURL: 'https://api.groq.com/openai/v1',
+      })
+    : new OpenAI({ apiKey });
+
+  return cachedClient;
+}
 
 //
 // ATTENDEE CHAT
@@ -403,7 +426,7 @@ ${message}
     //
 
     const completion =
-      await client.chat.completions.create({
+      await getAiClient().chat.completions.create({
 
         model:
           'llama-3.1-8b-instant',
@@ -816,7 +839,7 @@ FORMAT:
     //
 
     const completion =
-      await client.chat.completions.create({
+      await getAiClient().chat.completions.create({
 
         model:
           "llama-3.1-8b-instant",

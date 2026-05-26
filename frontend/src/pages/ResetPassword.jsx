@@ -1,8 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useToast } from '../context/ToastContext';
-import { useDarkMode } from '../context/DarkModeContext';
-import useViewport from '../hooks/useViewport';
 import { authService } from '../services/authService';
 import { useAuth } from '../context/AuthContext';
 
@@ -11,24 +9,8 @@ export default function ResetPassword() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
-  const { theme } = useDarkMode();
-  const { isMobile } = useViewport();
   const { setSession } = useAuth();
   const navigate = useNavigate();
-
-  const inputStyle = {
-    width: '100%',
-    padding: '10px 12px',
-    borderRadius: 8,
-    border: `1px solid ${theme.inputBorder}`,
-    fontSize: 14,
-    outline: 'none',
-    boxSizing: 'border-box',
-    fontFamily: 'inherit',
-    background: theme.inputBg,
-    color: theme.text,
-    transition: 'all 0.3s',
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -50,31 +32,43 @@ export default function ResetPassword() {
   };
 
   return (
-    <div style={{ minHeight: '100vh', background: theme.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, transition: 'background 0.3s' }}>
-      <div style={{ background: theme.surface, borderRadius: 16, padding: isMobile ? 22 : 36, width: '100%', maxWidth: 420, boxShadow: theme.modalShadow, border: `1px solid ${theme.border}`, transition: 'all 0.3s' }}>
-        <div style={{ textAlign: 'center', marginBottom: 18 }}>
-          <h1 style={{ margin: 0, fontSize: isMobile ? 22 : 24, fontWeight: 700, color: theme.text }}>Reset Password</h1>
-          <p style={{ margin: '6px 0 0', color: theme.textMuted, fontSize: 14 }}>Set a new password for your account.</p>
+    <div className="auth-page">
+      <div className="auth-card auth-split">
+        <div className="auth-left">
+          <h1 className="auth-title">Reset password</h1>
+          <p className="auth-subtitle">Set a new password for your account.</p>
+
+          <form onSubmit={handleSubmit} className="auth-form">
+            <div className="auth-field">
+              <label>New password</label>
+              <input
+                className="auth-input"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                autoComplete="new-password"
+                required
+                placeholder="Min. 6 characters"
+              />
+            </div>
+
+            <div className="auth-actions">
+              <button type="submit" className="auth-button" disabled={loading}>
+                {loading ? 'Updating...' : 'Update password'}
+              </button>
+            </div>
+          </form>
+
+          <div className="auth-links">
+            <Link to="/login" className="auth-link">
+              Back to login
+            </Link>
+          </div>
         </div>
 
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <div>
-            <label style={{ fontSize: 13, fontWeight: 500, color: theme.textSecondary, display: 'block', marginBottom: 4 }}>New password</label>
-            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="new-password" required style={inputStyle} placeholder="Min. 6 characters" />
-          </div>
-
-          <button type="submit" disabled={loading} style={{
-            width: '100%', padding: '11px 0', borderRadius: 8, border: 'none',
-            background: loading ? '#a5b4fc' : '#6366f1', color: '#fff',
-            fontWeight: 600, fontSize: 15, cursor: loading ? 'not-allowed' : 'pointer', marginTop: 4,
-          }}>
-            {loading ? 'Updating...' : 'Update password'}
-          </button>
-        </form>
-
-        <p style={{ textAlign: 'center', marginTop: 16, fontSize: 14, color: theme.textMuted }}>
-          <Link to="/login" style={{ color: '#6366f1', fontWeight: 600, textDecoration: 'none' }}>Back to login</Link>
-        </p>
+        <div className="auth-right" aria-hidden="true">
+          <img className="auth-illustration" src="/eventflow-illustration.svg" alt="" />
+        </div>
       </div>
     </div>
   );

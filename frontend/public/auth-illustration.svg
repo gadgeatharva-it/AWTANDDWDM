@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="600" viewBox="0 0 900 600" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="150" y1="40" x2="760" y2="560" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#EAF2FF"/>
+      <stop offset="1" stop-color="#F8FAFF"/>
+    </linearGradient>
+    <linearGradient id="wood" x1="240" y1="270" x2="640" y2="430" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F6C6A1"/>
+      <stop offset="1" stop-color="#F0B38A"/>
+    </linearGradient>
+    <linearGradient id="chair" x1="580" y1="300" x2="760" y2="520" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FF8DB6"/>
+      <stop offset="1" stop-color="#FF6FA6"/>
+    </linearGradient>
+    <filter id="shadow" x="-20" y="-20" width="940" height="640" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="18" stdDeviation="18" flood-color="#0F172A" flood-opacity="0.15"/>
+    </filter>
+  </defs>
+
+  <!-- Soft card background (to blend in right panel) -->
+  <g filter="url(#shadow)">
+    <rect x="120" y="40" width="660" height="520" rx="34" fill="url(#bg)"/>
+  </g>
+
+  <!-- Plant -->
+  <g transform="translate(190 250)">
+    <path d="M40 0C28 34 28 70 38 120" stroke="#2F6B4D" stroke-width="10" stroke-linecap="round"/>
+    <path d="M70 10C55 42 55 78 68 128" stroke="#2F6B4D" stroke-width="10" stroke-linecap="round"/>
+    <path d="M96 0C78 38 78 82 92 140" stroke="#2F6B4D" stroke-width="10" stroke-linecap="round"/>
+    <rect x="20" y="130" width="110" height="90" rx="14" fill="#C9D2E3"/>
+    <rect x="30" y="145" width="90" height="60" rx="12" fill="#B7C2D8"/>
+  </g>
+
+  <!-- Desk -->
+  <g transform="translate(0 0)">
+    <path d="M290 280C290 260 306 244 326 244H638C658 244 674 260 674 280V314C674 334 658 350 638 350H326C306 350 290 334 290 314V280Z" fill="url(#wood)"/>
+    <path d="M330 350H378L346 520H298L330 350Z" fill="#D4936D"/>
+    <path d="M620 350H668L700 520H652L620 350Z" fill="#D4936D"/>
+    <ellipse cx="482" cy="530" rx="160" ry="22" fill="#0F172A" opacity="0.10"/>
+  </g>
+
+  <!-- Laptop -->
+  <g transform="translate(0 0)">
+    <rect x="470" y="210" width="150" height="100" rx="10" fill="#1E293B"/>
+    <rect x="480" y="220" width="130" height="80" rx="8" fill="#0EA5E9" opacity="0.18"/>
+    <rect x="486" y="226" width="46" height="28" rx="6" fill="#60A5FA"/>
+    <rect x="538" y="226" width="46" height="28" rx="6" fill="#34D399"/>
+    <rect x="590" y="226" width="18" height="28" rx="6" fill="#F59E0B"/>
+    <rect x="486" y="260" width="60" height="36" rx="8" fill="#A78BFA"/>
+    <rect x="552" y="260" width="56" height="36" rx="8" fill="#FB7185"/>
+    <path d="M450 314H640C652 314 662 324 662 336V344H428V336C428 324 438 314 450 314Z" fill="#334155"/>
+    <rect x="428" y="344" width="234" height="14" rx="7" fill="#475569"/>
+  </g>
+
+  <!-- Chair -->
+  <g transform="translate(0 0)">
+    <path d="M640 320C640 296 660 276 684 276H734C758 276 778 296 778 320V360C778 384 758 404 734 404H684C660 404 640 384 640 360V320Z" fill="url(#chair)"/>
+    <path d="M618 372C618 348 638 328 662 328H708C732 328 752 348 752 372V430C752 454 732 474 708 474H662C638 474 618 454 618 430V372Z" fill="url(#chair)"/>
+    <path d="M642 472H668L650 540H624L642 472Z" fill="#D97706" opacity="0.75"/>
+    <path d="M708 472H734L752 540H726L708 472Z" fill="#D97706" opacity="0.75"/>
+    <path d="M600 440C598 416 615 398 638 398H758C781 398 798 416 796 440L792 492C789 516 768 534 744 534H652C628 534 607 516 604 492L600 440Z" fill="#F97316" opacity="0.10"/>
+  </g>
+
+  <!-- Small desk items -->
+  <g transform="translate(0 0)">
+    <rect x="350" y="300" width="56" height="12" rx="6" fill="#94A3B8"/>
+    <rect x="360" y="287" width="16" height="16" rx="4" fill="#F59E0B"/>
+    <rect x="380" y="287" width="16" height="16" rx="4" fill="#34D399"/>
+    <rect x="600" y="292" width="30" height="24" rx="8" fill="#FB7185" opacity="0.9"/>
+    <rect x="606" y="296" width="18" height="12" rx="6" fill="#F1F5F9" opacity="0.7"/>
+  </g>
+</svg>
