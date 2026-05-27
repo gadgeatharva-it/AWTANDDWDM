@@ -106,6 +106,11 @@ export default function Events() {
   const handleEdit = (event) => { setEditingEvent(event); setModalOpen(true); };
   const handleCardClick = (event) => detailsModal.openForEvent(event);
   const registeredIds = new Set(myRegistrations.map((registration) => registration.event?._id));
+  const canManageSelectedEvent = Boolean(
+    user
+    && detailsModal.event
+    && (user.role === 'admin' || user.id === detailsModal.event.organiser?._id),
+  );
 
   const handleRegister = async (event) => {
     try {
@@ -229,8 +234,8 @@ export default function Events() {
 
       <EventDetailsModal
         {...detailsModal.modalProps}
-        onEdit={(e) => { detailsModal.close(); handleEdit(e); }}
-        onDelete={(id) => { detailsModal.close(); handleDelete(id); }}
+        onEdit={canManageSelectedEvent ? (e) => { detailsModal.close(); handleEdit(e); } : undefined}
+        onDelete={canManageSelectedEvent ? (id) => { detailsModal.close(); handleDelete(id); } : undefined}
         onShare={(e) => {
           const url = `${window.location.origin}/app/events`;
           const text = `${e.title} • ${new Date(e.startDate).toLocaleDateString()} • ${e.location || 'Online'}\n${url}`;
