@@ -94,6 +94,7 @@ export default function Dashboard() {
   const detailsModal = useEventDetailsModal();
   const showAdvancedAnalytics = user?.role !== 'attendee';
   const isAttendee = user?.role === 'attendee';
+  const isOrganiser = user?.role === 'organiser';
   const quote = QUOTES[new Date().getDay() % QUOTES.length];
   const [filters, setFilters] = useState({ year: '', month: '', category: '', status: '', drill: 'month' });
   const firstName = user?.name?.split(' ')?.[0] || user?.name || '';
@@ -103,8 +104,8 @@ export default function Dashboard() {
   }, [fetchStats, filters]);
 
   useEffect(() => {
-    fetchEvents({ sort: '-createdAt', limit: 6 });
-  }, [fetchEvents]);
+    if (user?.role) fetchEvents({ sort: '-createdAt', limit: 6 });
+  }, [fetchEvents, user?.role]);
 
   useEffect(() => {
     if (user?.role === 'attendee') fetchMyRegistrations();
@@ -131,6 +132,12 @@ export default function Dashboard() {
   }));
 
   const availableYears = useMemo(() => (meta?.years || []).map((year) => String(year)), [meta]);
+  const analyticsSubtitle = isOrganiser
+    ? 'Slice, dice, drill-down, and pivot controls for your events'
+    : 'Slice, dice, drill-down, and pivot controls for the dashboard cube';
+  const recentEventsSubtitle = isOrganiser
+    ? 'Latest events created by you'
+    : 'Latest events visible to all users and organisers';
 
   const handleFilterChange = (key, value) => {
     setFilters((prev) => ({
@@ -182,7 +189,7 @@ export default function Dashboard() {
       </div>
 
       {showAdvancedAnalytics && (
-        <Panel title="OLAP Filters" theme={theme} subtitle="Slice, dice, drill-down, and pivot controls for the dashboard cube">
+        <Panel title="OLAP Filters" theme={theme} subtitle={analyticsSubtitle}>
           <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit, minmax(160px, 1fr))', gap: 12 }}>
             <select value={filters.year} onChange={(e) => handleFilterChange('year', e.target.value)} style={filterFieldStyle}>
               <option value="">All years</option>
@@ -285,7 +292,7 @@ export default function Dashboard() {
       {showAdvancedAnalytics && (
         <>
           <div style={{ display: 'grid', gridTemplateColumns: `repeat(auto-fit, minmax(${isMobile ? 240 : 320}px, 1fr))`, gap: 20 }}>
-            <Panel title="Drill-Down View" theme={theme} subtitle="Year -> Month -> Day analysis of filtered events">
+            <Panel title="Drill-Down View" theme={theme} subtitle={isOrganiser ? 'Year -> Month -> Day analysis of your filtered events' : 'Year -> Month -> Day analysis of filtered events'}>
               {drillData.length === 0 ? (
                 <p style={{ color: theme.textFaint, fontSize: 14 }}>No drill-down data yet</p>
               ) : (
@@ -303,7 +310,7 @@ export default function Dashboard() {
               )}
             </Panel>
 
-            <Panel title="Pivot: Category vs Revenue" theme={theme} subtitle="Pivoted revenue and registrations by category">
+            <Panel title="Pivot: Category vs Revenue" theme={theme} subtitle={isOrganiser ? 'Your revenue and registrations by category' : 'Pivoted revenue and registrations by category'}>
               {pivotData.length === 0 ? (
                 <p style={{ color: theme.textFaint, fontSize: 14 }}>No pivot data yet</p>
               ) : (
@@ -322,7 +329,7 @@ export default function Dashboard() {
             </Panel>
           </div>
 
-          <Panel title="Trend Analysis" theme={theme} subtitle="Monthly events, registrations, and revenue movement">
+          <Panel title="Trend Analysis" theme={theme} subtitle={isOrganiser ? 'Monthly movement across your events, registrations, and revenue' : 'Monthly events, registrations, and revenue movement'}>
             {trendData.length === 0 ? (
               <p style={{ color: theme.textFaint, fontSize: 14 }}>No trend data yet</p>
             ) : (
@@ -382,7 +389,7 @@ export default function Dashboard() {
         </>
       )}
 
-      <Panel title="Recent Events" theme={theme} subtitle="Latest events visible to all users and organisers">
+      <Panel title="Recent Events" theme={theme} subtitle={recentEventsSubtitle}>
         {loading && events.length === 0 ? (
           <p style={{ color: theme.textFaint, fontSize: 14 }}>Loading events...</p>
         ) : events.length === 0 ? (

@@ -167,7 +167,7 @@ export default function Events() {
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit, minmax(180px, 1fr))', gap: 10 }}>
         <input
           type="text"
-          placeholder="Search name, location, city, tag..."
+          placeholder="Search name, location, city, tag, month..."
           value={filters.search}
           onChange={(e) => handleFilterChange('search', e.target.value)}
           style={{ ...selectStyle, cursor: 'text' }}

@@ -28,6 +28,11 @@ function AppRoutes() {
   const showOrganizerCopilot = user?.role === 'organiser';
   const adminOnly = (element) => (user?.role === 'admin' ? element : <Navigate to="/app/dashboard" replace />);
   const organiserOnly = (element) => (user?.role === 'organiser' ? element : <Navigate to="/app/dashboard" replace />);
+  const qnaAllowed = (element) => (
+    user?.role === 'attendee' || user?.role === 'organiser'
+      ? element
+      : <Navigate to="/app/dashboard" replace />
+  );
 
   return (
     <Routes>
@@ -55,7 +60,7 @@ function AppRoutes() {
         <Route path="my-attendees" element={organiserOnly(<MyAttendees />)} />
         <Route path="upcoming" element={<UpcomingEvents />} />
         <Route path="notifications" element={<Notifications />} />
-        <Route path="qa" element={<QandA />} />
+        <Route path="qa" element={qnaAllowed(<QandA />)} />
         <Route path="admin-control" element={adminOnly(<AdminControl />)} />
         <Route
           path="ai-copilot"

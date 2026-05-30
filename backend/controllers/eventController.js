@@ -1,8 +1,25 @@
 const { validationResult } = require('express-validator');
+const mongoose = require('mongoose');
 const Event = require('../models/Event');
 const Registration = require('../models/Registration');
 
 const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const MONTH_LOOKUP = MONTH_NAMES.reduce((acc, name, index) => {
+  acc[name.toLowerCase()] = index + 1;
+  return acc;
+}, {
+  january: 1,
+  february: 2,
+  march: 3,
+  april: 4,
+  june: 6,
+  july: 7,
+  august: 8,
+  september: 9,
+  october: 10,
+  november: 11,
+  december: 12,
+});
 
 function escapeRegex(value) {
   return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -18,18 +35,25 @@ function addEventSearchFilter(filter, search) {
   filter.$and = filter.$and || [];
   terms.forEach((term) => {
     const pattern = new RegExp(escapeRegex(term), 'i');
+    const month = MONTH_LOOKUP[term.toLowerCase()];
+    const clauses = [
+      { title: pattern },
+      { description: pattern },
+      { aiSummary: pattern },
+      { location: pattern },
+      { city: pattern },
+      { category: pattern },
+      { status: pattern },
+      { tags: pattern },
+      { externalUrl: pattern },
+    ];
+
+    if (month) {
+      clauses.push({ $expr: { $eq: [{ $month: '$startDate' }, month] } });
+    }
+
     filter.$and.push({
-      $or: [
-        { title: pattern },
-        { description: pattern },
-        { aiSummary: pattern },
-        { location: pattern },
-        { city: pattern },
-        { category: pattern },
-        { status: pattern },
-        { tags: pattern },
-        { externalUrl: pattern },
-      ],
+      $or: clauses,
     });
   });
 }
@@ -61,10 +85,15 @@ function buildEventMatch(query) {
   return match;
 }
 
+function getScopedOrganiserId(user) {
+  if (user?.role !== 'organiser' || !mongoose.Types.ObjectId.isValid(user.id)) return null;
+  return new mongoose.Types.ObjectId(user.id);
+}
+
 function applyRoleScopedEventFilter(filter, user) {
   if (user?.role === 'admin') return;
   if (user?.role === 'organiser') {
-    filter.organiser = user.id;
+    filter.organiser = getScopedOrganiserId(user);
     return;
   }
   filter.status = 'published';

@@ -211,7 +211,7 @@ export default function AdminControl() {
           <div style={{ color: theme.textMuted, fontSize: 13 }}>{eventPagination.total} events</div>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 150px 150px 150px', gap: 10, marginBottom: 14 }}>
-          <input placeholder="Search title, location, city, tag..." value={eventFilters.search} onChange={(e) => setEventFilters((f) => ({ ...f, search: e.target.value, page: 1 }))} style={inputStyle} />
+          <input placeholder="Search title, location, city, tag, month..." value={eventFilters.search} onChange={(e) => setEventFilters((f) => ({ ...f, search: e.target.value, page: 1 }))} style={inputStyle} />
           <select value={eventFilters.status} onChange={(e) => setEventFilters((f) => ({ ...f, status: e.target.value, page: 1 }))} style={inputStyle}>
             <option value="">All statuses</option>
             <option value="draft">Draft</option>

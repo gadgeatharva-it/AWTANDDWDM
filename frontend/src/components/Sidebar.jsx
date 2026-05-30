@@ -17,7 +17,7 @@ export default function Sidebar({ open, onClose }) {
   const { isMobile, isDesktop } = useViewport();
 
   const showActivityLogs = user?.role === 'organiser' || user?.role === 'admin';
-  const showQandA = Boolean(user);
+  const showQandA = user?.role === 'attendee' || user?.role === 'organiser';
   const showAttendeeExtras = user?.role === 'attendee';
   const showExecutiveExport = user?.role === 'admin';
   const showMyAttendees = user?.role === 'organiser';
