@@ -58,8 +58,9 @@ exports.getMyQuestions = async (req, res, next) => {
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(safeLimit)
+        .maxTimeMS(8000)
         .lean(),
-      Question.countDocuments({ attendee: req.user.id }),
+      Question.countDocuments({ attendee: req.user.id }).maxTimeMS(8000),
     ]);
 
     res.json({ questions, total, page: safePage, pages: Math.ceil(total / safeLimit) });
@@ -81,11 +82,8 @@ exports.getInbox = async (req, res, next) => {
     if (status) filter.status = status;
     if (eventId) filter.event = eventId;
 
-    // Use Events as the source of truth for organiser ownership so inbox
-    // still works even if `Question.organiser` is missing/incorrect.
     if (req.user.role !== 'admin') {
-      const myEventIds = await Event.find({ organiser: req.user.id }).distinct('_id');
-      filter.event = filter.event ? filter.event : { $in: myEventIds };
+      filter.organiser = req.user.id;
     }
 
     const [questions, total] = await Promise.all([
@@ -95,8 +93,9 @@ exports.getInbox = async (req, res, next) => {
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(safeLimit)
+        .maxTimeMS(8000)
         .lean(),
-      Question.countDocuments(filter),
+      Question.countDocuments(filter).maxTimeMS(8000),
     ]);
 
     res.json({ questions, total, page: safePage, pages: Math.ceil(total / safeLimit) });

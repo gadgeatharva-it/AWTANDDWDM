@@ -13,7 +13,7 @@ router.post(
     body('name').trim().notEmpty().withMessage('Name is required').isLength({ max: 50 }),
     body('email').trim().isEmail().withMessage('Valid email is required').normalizeEmail(),
     body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
-    body('role').optional().isString(),
+    body('role').optional().isIn(['attendee', 'organiser', 'organizer']).withMessage('Invalid account role'),
   ],
   validate,
   register

@@ -21,10 +21,11 @@ function formatDateTime(value) {
 
 exports.exportExecutiveSummaryCsv = async (req, res, next) => {
   try {
-    const organiserId = req.user.id;
-    const organiserName = req.user.name || '';
+    const ownerFilter = req.user.role === 'admin' ? {} : { organiser: req.user.id };
+    const ownerName = req.user.role === 'admin' ? 'All organisers' : (req.user.name || '');
 
-    const events = await Event.find({ organiser: organiserId })
+    const events = await Event.find(ownerFilter)
+      .populate('organiser', 'name email')
       .select('title registeredCount startDate endDate location capacity price category status tags createdAt updatedAt')
       .lean();
 
@@ -60,7 +61,7 @@ exports.exportExecutiveSummaryCsv = async (req, res, next) => {
         [
           event?._id?.toString?.() || '',
           event?.title || '',
-          organiserName,
+          event?.organiser?.name || ownerName,
           formatDate(event?.startDate),
           formatDate(event?.endDate),
           event?.location || '',
@@ -81,7 +82,7 @@ exports.exportExecutiveSummaryCsv = async (req, res, next) => {
       [
         '',
         'TOTAL',
-        organiserName,
+        ownerName,
         '',
         '',
         '',

@@ -31,5 +31,8 @@ const registrationSchema = new mongoose.Schema(
 
 // One registration per attendee per event
 registrationSchema.index({ event: 1, attendee: 1 }, { unique: true });
+registrationSchema.index({ event: 1, status: 1, updatedAt: -1 });
+registrationSchema.index({ attendee: 1, status: 1, createdAt: -1 });
+registrationSchema.index({ status: 1, createdAt: -1 });
 
 module.exports = mongoose.model('Registration', registrationSchema);

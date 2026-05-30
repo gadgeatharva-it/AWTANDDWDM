@@ -36,6 +36,7 @@ export default function MyRegisteredEvents() {
           title: event.title,
           date: formatShortDate(event.startDate),
           location: event.location || 'Online',
+          externalUrl: event.externalUrl || '',
           status: isCompleted ? 'Completed' : 'Upcoming',
         };
       });
@@ -75,6 +76,26 @@ export default function MyRegisteredEvents() {
                 </div>
                 <div style={{ marginTop: 4, color: theme.textMuted, fontSize: 12.8 }}>{row.date} • {row.location}</div>
               </div>
+              {row.externalUrl && (
+                <a
+                  href={row.externalUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  style={{
+                    padding: '6px 10px',
+                    borderRadius: 8,
+                    border: `1px solid ${theme.inputBorder}`,
+                    color: '#4f46e5',
+                    fontSize: 12,
+                    fontWeight: 800,
+                    textDecoration: 'none',
+                    whiteSpace: 'nowrap',
+                    flex: '0 0 auto',
+                  }}
+                >
+                  Website
+                </a>
+              )}
               <div style={{
                 padding: '6px 10px',
                 borderRadius: 999,
@@ -96,4 +117,3 @@ export default function MyRegisteredEvents() {
     </div>
   );
 }
-

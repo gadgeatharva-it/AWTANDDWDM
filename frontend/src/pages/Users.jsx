@@ -5,6 +5,7 @@ import { useToast } from '../context/ToastContext';
 import { LoadingSpinner } from '../components/ProtectedRoute';
 import useViewport from '../hooks/useViewport';
 import { userService } from '../services/userService';
+import useDebouncedValue from '../hooks/useDebouncedValue';
 
 function formatDate(value) {
   const date = value ? new Date(value) : null;
@@ -18,21 +19,22 @@ export default function Users() {
   const { theme } = useDarkMode();
   const { isMobile } = useViewport();
 
-  const canView = user?.role === 'organiser' || user?.role === 'admin';
+  const canView = user?.role === 'admin';
   const canManageAll = user?.role === 'admin';
-  const canManageAttendees = user?.role === 'organiser';
+  const canManageAttendees = false;
   const canManage = canManageAll || canManageAttendees;
 
   const [loading, setLoading] = useState(false);
   const [rows, setRows] = useState([]);
   const [pagination, setPagination] = useState({ total: 0, page: 1, pages: 0 });
   const [filters, setFilters] = useState({ role: '', search: '', page: 1, limit: 20, active: '' });
+  const debouncedFilters = useDebouncedValue(filters, 350);
 
   const load = useCallback(async () => {
     if (!canView) return;
     setLoading(true);
     try {
-      const params = { ...filters };
+      const params = { ...debouncedFilters };
       if (!params.role) delete params.role;
       if (!params.search) delete params.search;
       if (params.active === '') delete params.active;
@@ -46,7 +48,7 @@ export default function Users() {
     } finally {
       setLoading(false);
     }
-  }, [canView, filters, toast]);
+  }, [canView, debouncedFilters, toast]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -137,7 +139,7 @@ export default function Users() {
         </select>
       </div>
 
-      {loading ? (
+      {loading && items.length === 0 ? (
         <LoadingSpinner />
       ) : items.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '56px 0', color: theme.textFaint }}>

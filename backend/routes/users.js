@@ -4,7 +4,7 @@ const { listUsers, setUserActive } = require('../controllers/userController');
 
 const router = express.Router();
 
-router.get('/', protect, restrictTo('admin', 'organiser'), listUsers);
-router.patch('/:id/active', protect, restrictTo('admin', 'organiser'), setUserActive);
+router.get('/', protect, restrictTo('admin'), listUsers);
+router.patch('/:id/active', protect, restrictTo('admin'), setUserActive);
 
 module.exports = router;

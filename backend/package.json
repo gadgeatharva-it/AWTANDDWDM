@@ -9,6 +9,7 @@
     "trim:events": "node scripts/trim-events.js --apply",
     "repair:organisers:dry": "node scripts/repair-orphaned-organisers.js",
     "repair:organisers": "node scripts/repair-orphaned-organisers.js --apply",
+    "seed:admin": "node scripts/ensure-admin.js",
     "seed:ieee": "node scripts/add-ieee-conferences.js"
   },
   "dependencies": {

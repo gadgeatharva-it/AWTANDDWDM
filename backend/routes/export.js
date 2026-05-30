@@ -4,7 +4,6 @@ const { exportExecutiveSummaryCsv } = require('../controllers/exportController')
 
 const router = express.Router();
 
-router.get('/executive-summary', protect, restrictTo('organiser'), exportExecutiveSummaryCsv);
+router.get('/executive-summary', protect, restrictTo('admin'), exportExecutiveSummaryCsv);
 
 module.exports = router;
-

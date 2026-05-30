@@ -13,7 +13,7 @@ export default function EventModal({ event, onSave, onClose }) {
   const { isMobile } = useViewport();
   const [form, setForm] = useState({
     title: '', description: '', category: 'other', status: 'draft',
-    location: '', startDate: '', endDate: '', capacity: '', price: '', tags: '',
+    location: '', externalUrl: '', startDate: '', endDate: '', capacity: '', price: '', tags: '',
   });
   const [errors, setErrors] = useState({});
   const [saving, setSaving] = useState(false);
@@ -26,6 +26,7 @@ export default function EventModal({ event, onSave, onClose }) {
         category: event.category || 'other',
         status: event.status || 'draft',
         location: event.location || '',
+        externalUrl: event.externalUrl || '',
         startDate: toDateInput(event.startDate),
         endDate: toDateInput(event.endDate),
         capacity: event.capacity || '',
@@ -42,6 +43,7 @@ export default function EventModal({ event, onSave, onClose }) {
     if (!form.endDate) e.endDate = 'End date is required';
     if (form.startDate && form.endDate && form.endDate <= form.startDate) e.endDate = 'End date must be after start date';
     if (!form.capacity || Number(form.capacity) < 1) e.capacity = 'Capacity must be at least 1';
+    if (form.externalUrl.trim() && !/^https?:\/\/\S+\.\S+/.test(form.externalUrl.trim())) e.externalUrl = 'Enter a valid website URL';
     return e;
   };
 
@@ -113,6 +115,12 @@ export default function EventModal({ event, onSave, onClose }) {
           <div>
             <label style={labelStyle}>Location</label>
             <input name="location" value={form.location} onChange={handleChange} style={fieldStyle('location')} placeholder="Venue or Online" />
+          </div>
+
+          <div>
+            <label style={labelStyle}>Website Link</label>
+            <input name="externalUrl" value={form.externalUrl} onChange={handleChange} style={fieldStyle('externalUrl')} placeholder="https://event-website.com" />
+            {errors.externalUrl && <span style={{ color: '#ef4444', fontSize: 12 }}>{errors.externalUrl}</span>}
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 12 }}>

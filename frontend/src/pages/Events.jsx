@@ -9,6 +9,7 @@ import EventDetailsModal from '../components/EventDetailsModal';
 import { LoadingSpinner } from '../components/ProtectedRoute';
 import useViewport from '../hooks/useViewport';
 import { useEventDetailsModal } from '../hooks/useEventDetailsModal';
+import useDebouncedValue from '../hooks/useDebouncedValue';
 
 const CATEGORIES = ['', 'conference', 'workshop', 'webinar', 'meetup', 'concert', 'sports', 'other'];
 const STATUSES = ['', 'draft', 'published', 'cancelled', 'completed'];
@@ -45,6 +46,7 @@ export default function Events() {
   const { isMobile, isTablet } = useViewport();
 
   const [filters, setFilters] = useState({ search: '', category: '', status: '', priceType: '', sort: '-createdAt', page: 1 });
+  const debouncedFilters = useDebouncedValue(filters, 350);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingEvent, setEditingEvent] = useState(null);
   const detailsModal = useEventDetailsModal();
@@ -55,15 +57,15 @@ export default function Events() {
 
   const load = useCallback(() => {
     const params = {};
-    if (filters.search) params.search = filters.search;
-    if (filters.category) params.category = filters.category;
-    if (filters.status) params.status = filters.status;
-    if (filters.priceType) params.priceType = filters.priceType;
-    params.sort = filters.sort;
-    params.page = filters.page;
+    if (debouncedFilters.search) params.search = debouncedFilters.search;
+    if (debouncedFilters.category) params.category = debouncedFilters.category;
+    if (debouncedFilters.status) params.status = debouncedFilters.status;
+    if (debouncedFilters.priceType) params.priceType = debouncedFilters.priceType;
+    params.sort = debouncedFilters.sort;
+    params.page = debouncedFilters.page;
     params.limit = pageLimit;
     fetchEvents(params);
-  }, [filters, fetchEvents, pageLimit]);
+  }, [debouncedFilters, fetchEvents, pageLimit]);
 
   useEffect(() => { load(); }, [load]);
   useEffect(() => {
@@ -165,7 +167,7 @@ export default function Events() {
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit, minmax(180px, 1fr))', gap: 10 }}>
         <input
           type="text"
-          placeholder="Search events..."
+          placeholder="Search name, location, city, tag..."
           value={filters.search}
           onChange={(e) => handleFilterChange('search', e.target.value)}
           style={{ ...selectStyle, cursor: 'text' }}
@@ -184,7 +186,7 @@ export default function Events() {
         </select>
       </div>
 
-      {loading ? (
+      {loading && events.length === 0 ? (
         <LoadingSpinner />
       ) : events.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '60px 0', color: theme.textFaint }}>

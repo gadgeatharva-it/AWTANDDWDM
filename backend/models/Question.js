@@ -43,6 +43,8 @@ const questionSchema = new mongoose.Schema(
 );
 
 questionSchema.index({ event: 1, attendee: 1, createdAt: -1 });
+questionSchema.index({ organiser: 1, status: 1, createdAt: -1 });
+questionSchema.index({ status: 1, createdAt: -1 });
+questionSchema.index({ createdAt: -1 });
 
 module.exports = mongoose.model('Question', questionSchema);
-

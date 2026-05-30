@@ -22,7 +22,12 @@ exports.listUsers = async (req, res, next) => {
         filter.$or = [
           { name: { $regex: q, $options: 'i' } },
           { email: { $regex: q, $options: 'i' } },
+          { role: { $regex: q, $options: 'i' } },
         ];
+
+        const status = q.toLowerCase();
+        if (['active', 'enabled'].includes(status)) filter.$or.push({ isActive: true });
+        if (['inactive', 'deactivated', 'disabled'].includes(status)) filter.$or.push({ isActive: false });
       }
     }
 

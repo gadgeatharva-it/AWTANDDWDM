@@ -5,8 +5,8 @@ import { useDarkMode } from '../context/DarkModeContext';
 import useViewport from '../hooks/useViewport';
 
 const baseNavItems = [
-  { to: '/app/dashboard', label: 'Dashboard', icon: '📊' },
-  { to: '/app/events', label: 'Events', icon: '🗓️' },
+  { to: '/app/dashboard', label: 'Dashboard', icon: 'D' },
+  { to: '/app/events', label: 'Events', icon: 'E' },
 ];
 
 export default function Sidebar({ open, onClose }) {
@@ -19,17 +19,21 @@ export default function Sidebar({ open, onClose }) {
   const showActivityLogs = user?.role === 'organiser' || user?.role === 'admin';
   const showQandA = Boolean(user);
   const showAttendeeExtras = user?.role === 'attendee';
-  const showExecutiveExport = user?.role === 'organiser';
+  const showExecutiveExport = user?.role === 'admin';
+  const showMyAttendees = user?.role === 'organiser';
+  const showAdminControl = user?.role === 'admin';
 
   const navItems = [
     ...baseNavItems,
-    ...(showAttendeeExtras ? [{ to: '/app/my-events', label: 'My Registered Events', icon: '🧾' }] : []),
-    ...(showAttendeeExtras ? [{ to: '/app/upcoming', label: 'Upcoming (7 days)', icon: '⏳' }] : []),
-    ...(showAttendeeExtras ? [{ to: '/app/notifications', label: 'Notifications', icon: '🔔' }] : []),
-    ...(showActivityLogs ? [{ to: '/app/activity', label: 'Activity Logs', icon: '📜' }] : []),
-    ...(showActivityLogs ? [{ to: '/app/users', label: 'Users', icon: '👥' }] : []),
-    ...(showExecutiveExport ? [{ to: '/app/export/executive-summary', label: 'Export Executive Summary', icon: '📤' }] : []),
-    ...(showQandA ? [{ to: '/app/qa', label: 'Q&A', icon: '💬' }] : []),
+    ...(showAttendeeExtras ? [{ to: '/app/my-events', label: 'My Registered Events', icon: 'R' }] : []),
+    ...(showAttendeeExtras ? [{ to: '/app/upcoming', label: 'Upcoming (7 days)', icon: 'U' }] : []),
+    ...(showAttendeeExtras ? [{ to: '/app/notifications', label: 'Notifications', icon: 'N' }] : []),
+    ...(showActivityLogs ? [{ to: '/app/activity', label: 'Activity Logs', icon: 'A' }] : []),
+    ...(showMyAttendees ? [{ to: '/app/my-attendees', label: 'My Attendees', icon: 'M' }] : []),
+    ...(showAdminControl ? [{ to: '/app/users', label: 'Users', icon: 'U' }] : []),
+    ...(showAdminControl ? [{ to: '/app/admin-control', label: 'Admin Control', icon: '*' }] : []),
+    ...(showExecutiveExport ? [{ to: '/app/export/executive-summary', label: 'Export Executive Summary', icon: 'X' }] : []),
+    ...(showQandA ? [{ to: '/app/qa', label: 'Q&A', icon: 'Q' }] : []),
   ];
 
   const handleLogout = () => {
@@ -77,14 +81,14 @@ export default function Sidebar({ open, onClose }) {
       }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 32, paddingLeft: 8 }}>
-          <span style={{ fontSize: 22 }}>🎪</span>
+          <span style={{ fontSize: 22, fontWeight: 900, color: '#6366f1' }}>EF</span>
           <span style={{ fontWeight: 700, fontSize: 18, color: theme.text }}>EventFlow</span>
         </div>
 
         <nav style={{ display: 'flex', flexDirection: 'column', gap: 4, flex: 1 }}>
           {navItems.map((item) => (
             <NavLink key={item.to} to={item.to} style={linkStyle} onClick={!isDesktop ? onClose : undefined}>
-              <span>{item.icon}</span> {item.label}
+              <span style={{ width: 18, textAlign: 'center', fontWeight: 800 }}>{item.icon}</span> {item.label}
             </NavLink>
           ))}
         </nav>

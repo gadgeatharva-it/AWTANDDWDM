@@ -3,6 +3,7 @@ html,
 body,
 #root {
   height: 100%;
+  overscroll-behavior-y: none;
 }
 
 /* Theme tokens (used by auth CSS; other screens keep their inline styles). */
@@ -36,6 +37,7 @@ body,
 
 body {
   overflow-x: hidden;
+  overscroll-behavior: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;

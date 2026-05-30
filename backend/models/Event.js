@@ -123,6 +123,12 @@ const eventSchema = new mongoose.Schema(
       default: 'Online',
     },
 
+    externalUrl: {
+      type: String,
+      trim: true,
+      default: '',
+    },
+
     // NEW → city for AI filtering
     city: {
       type: String,
@@ -232,9 +238,17 @@ eventSchema.index({ startDate: 1 });
 
 eventSchema.index({ city: 1 });
 
+eventSchema.index({ status: 1, category: 1, startDate: 1 });
+
+eventSchema.index({ createdAt: -1 });
+
+eventSchema.index({ registeredCount: -1 });
+
 eventSchema.index({
   title: 'text',
   description: 'text',
+  location: 'text',
+  city: 'text',
   tags: 'text',
 });
 

@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useCallback } from 'react';
+import { createContext, useContext, useState, useCallback, useMemo } from 'react';
 import useViewport from '../hooks/useViewport';
 
 const ToastContext = createContext();
@@ -13,11 +13,13 @@ export function ToastProvider({ children }) {
     setTimeout(() => setToasts((prev) => prev.filter((t) => t.id !== id)), duration);
   }, []);
 
-  const toast = {
+  const toast = useMemo(() => ({
     success: (msg) => addToast(msg, 'success'),
     error: (msg) => addToast(msg, 'error'),
     info: (msg) => addToast(msg, 'info'),
-  };
+  }), [addToast]);
+
+  const value = useMemo(() => ({ toast }), [toast]);
 
   const typeStyles = {
     success: { background: '#16a34a', color: '#fff' },
@@ -26,7 +28,7 @@ export function ToastProvider({ children }) {
   };
 
   return (
-    <ToastContext.Provider value={{ toast }}>
+    <ToastContext.Provider value={value}>
       {children}
       <div style={{
         position: 'fixed',

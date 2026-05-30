@@ -20,10 +20,14 @@ import MyRegisteredEvents from './pages/MyRegisteredEvents';
 import UpcomingEvents from './pages/UpcomingEvents';
 import Notifications from './pages/Notifications';
 import OrganizerCopilot from './components/OrganizerCopilot';
+import AdminControl from './pages/AdminControl';
+import MyAttendees from './pages/MyAttendees';
 
 function AppRoutes() {
   const { user } = useAuth();
   const showOrganizerCopilot = user?.role === 'organiser';
+  const adminOnly = (element) => (user?.role === 'admin' ? element : <Navigate to="/app/dashboard" replace />);
+  const organiserOnly = (element) => (user?.role === 'organiser' ? element : <Navigate to="/app/dashboard" replace />);
 
   return (
     <Routes>
@@ -45,12 +49,14 @@ function AppRoutes() {
         <Route path="dashboard" element={<Dashboard />} />
         <Route path="events" element={<Events />} />
         <Route path="activity" element={<ActivityLogs />} />
-        <Route path="users" element={<Users />} />
-        <Route path="export/executive-summary" element={<ExportExecutiveSummary />} />
+        <Route path="users" element={adminOnly(<Users />)} />
+        <Route path="export/executive-summary" element={adminOnly(<ExportExecutiveSummary />)} />
         <Route path="my-events" element={<MyRegisteredEvents />} />
+        <Route path="my-attendees" element={organiserOnly(<MyAttendees />)} />
         <Route path="upcoming" element={<UpcomingEvents />} />
         <Route path="notifications" element={<Notifications />} />
         <Route path="qa" element={<QandA />} />
+        <Route path="admin-control" element={adminOnly(<AdminControl />)} />
         <Route
           path="ai-copilot"
           element={

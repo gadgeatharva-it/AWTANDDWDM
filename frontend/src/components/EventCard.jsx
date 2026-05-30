@@ -24,6 +24,7 @@ export default function EventCard({ event, onEdit, onDelete }) {
   const isRegistered = Boolean(event.isRegistered);
   const isPublished = event.status === 'published';
   const isFull = event.registeredCount >= event.capacity;
+  const externalUrl = String(event.externalUrl || '').trim();
 
   const fillPct = event.capacity > 0 ? Math.min(100, Math.round((event.registeredCount / event.capacity) * 100)) : 0;
   const sc = statusColors[event.status] || statusColors.draft;
@@ -50,6 +51,7 @@ export default function EventCard({ event, onEdit, onDelete }) {
       padding: isMobile ? 16 : 20, display: 'flex', flexDirection: 'column', gap: 12,
       boxShadow: theme.cardShadow, transition: 'all 0.3s',
       height: '100%',
+      minWidth: 0,
       cursor: cardClickable ? 'pointer' : 'default',
       outline: 'none',
     }}
@@ -74,9 +76,9 @@ export default function EventCard({ event, onEdit, onDelete }) {
         </span>
       </div>
 
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, fontSize: 13, color: theme.textMuted }}>
-        <span>{new Date(event.startDate).toLocaleDateString()}</span>
-        <span style={{ wordBreak: 'break-word' }}>{event.location}</span>
+      <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '8px 12px', fontSize: 13, color: theme.textMuted, minWidth: 0 }}>
+        <span style={{ flex: '0 0 auto' }}>{new Date(event.startDate).toLocaleDateString()}</span>
+        <span style={{ flex: '1 1 150px', minWidth: 0, overflowWrap: 'anywhere', lineHeight: 1.35 }}>{event.location}</span>
         {event.price > 0 ? <span>Rs {event.price}</span> : <span style={{ color: '#10b981', fontWeight: 600 }}>Free</span>}
       </div>
 
@@ -111,8 +113,32 @@ export default function EventCard({ event, onEdit, onDelete }) {
         </div>
       )}
 
+      {externalUrl && (
+        <a
+          href={externalUrl}
+          target="_blank"
+          rel="noreferrer"
+          onClick={(e) => e.stopPropagation()}
+          style={{
+            display: 'block',
+            textAlign: 'center',
+            padding: '9px 0',
+            borderRadius: 8,
+            border: `1px solid ${theme.inputBorder}`,
+            background: theme.surface,
+            color: '#4f46e5',
+            fontWeight: 700,
+            fontSize: 13,
+            textDecoration: 'none',
+            marginTop: showActions ? 0 : 'auto',
+          }}
+        >
+          Visit Website
+        </a>
+      )}
+
       {canRegister && !showActions && (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 8, marginTop: 'auto' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 8, marginTop: externalUrl ? 0 : 'auto' }}>
           {isRegistered ? (
             <button
               onClick={() => event.onCancelRegistration?.(event)}

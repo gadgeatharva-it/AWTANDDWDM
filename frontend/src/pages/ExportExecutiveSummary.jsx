@@ -16,7 +16,7 @@ export default function ExportExecutiveSummary() {
   const { toast } = useToast();
   const [downloading, setDownloading] = useState(false);
 
-  const canExport = user?.role === 'organiser';
+  const canExport = user?.role === 'admin';
 
   const handleDownload = async () => {
     setDownloading(true);
@@ -83,4 +83,3 @@ export default function ExportExecutiveSummary() {
     </div>
   );
 }
-

@@ -12,6 +12,7 @@ export const eventService = {
   register: (eventId, notes) => api.post('/registrations/register', { eventId, notes }),
   cancelRegistration: (eventId) => api.delete(`/registrations/cancel/${eventId}`),
   getMyRegistrations: () => api.get('/registrations/my'),
+  getMyAttendees: (params) => api.get('/registrations/my-attendees', { params }),
   getAttendees: (eventId) => api.get(`/registrations/event/${eventId}`),
   getRegistrationActivity: (params) => api.get('/registrations/activity', { params }),
 };

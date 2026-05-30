@@ -383,7 +383,7 @@ export default function Dashboard() {
       )}
 
       <Panel title="Recent Events" theme={theme} subtitle="Latest events visible to all users and organisers">
-        {loading ? (
+        {loading && events.length === 0 ? (
           <p style={{ color: theme.textFaint, fontSize: 14 }}>Loading events...</p>
         ) : events.length === 0 ? (
           <p style={{ color: theme.textFaint, fontSize: 14 }}>No events available yet</p>

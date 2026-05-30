@@ -4,6 +4,36 @@ const Registration = require('../models/Registration');
 
 const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
+function escapeRegex(value) {
+  return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function addEventSearchFilter(filter, search) {
+  const q = String(search || '').trim();
+  if (!q) return;
+
+  const terms = q.split(/\s+/).filter(Boolean).slice(0, 8);
+  if (terms.length === 0) return;
+
+  filter.$and = filter.$and || [];
+  terms.forEach((term) => {
+    const pattern = new RegExp(escapeRegex(term), 'i');
+    filter.$and.push({
+      $or: [
+        { title: pattern },
+        { description: pattern },
+        { aiSummary: pattern },
+        { location: pattern },
+        { city: pattern },
+        { category: pattern },
+        { status: pattern },
+        { tags: pattern },
+        { externalUrl: pattern },
+      ],
+    });
+  });
+}
+
 function buildEventMatch(query) {
   const { category, status, year, month } = query;
   const match = {};
@@ -29,6 +59,15 @@ function buildEventMatch(query) {
   }
 
   return match;
+}
+
+function applyRoleScopedEventFilter(filter, user) {
+  if (user?.role === 'admin') return;
+  if (user?.role === 'organiser') {
+    filter.organiser = user.id;
+    return;
+  }
+  filter.status = 'published';
 }
 
 function makeTrendBuckets(count = 12) {
@@ -181,26 +220,31 @@ function summarizeClusters(points) {
 exports.getEvents = async (req, res, next) => {
   try {
     const { search, category, status, priceType, sort = '-createdAt', page = 1, limit = 10 } = req.query;
+    const safeLimit = Math.min(100, Math.max(1, Number(limit) || 10));
+    const safePage = Math.max(1, Number(page) || 1);
 
     const filter = {};
     if (category) filter.category = category;
     if (status) filter.status = status;
-    if (search) filter.$text = { $search: search };
+    addEventSearchFilter(filter, search);
     if (priceType === 'free') filter.price = 0;
     if (priceType === 'paid') filter.price = { $gt: 0 };
+    applyRoleScopedEventFilter(filter, req.user);
 
-    const skip = (Number(page) - 1) * Number(limit);
+    const skip = (safePage - 1) * safeLimit;
 
     const [events, total] = await Promise.all([
       Event.find(filter)
         .populate('organiser', 'name email')
         .sort(sort)
         .skip(skip)
-        .limit(Number(limit)),
-      Event.countDocuments(filter),
+        .limit(safeLimit)
+        .maxTimeMS(8000)
+        .lean(),
+      Event.countDocuments(filter).maxTimeMS(8000),
     ]);
 
-    res.json({ events, total, page: Number(page), pages: Math.ceil(total / Number(limit)) });
+    res.json({ events, total, page: safePage, pages: Math.ceil(total / safeLimit) });
   } catch (err) {
     next(err);
   }
@@ -211,6 +255,9 @@ exports.getEvent = async (req, res, next) => {
   try {
     const event = await Event.findById(req.params.id).populate('organiser', 'name email');
     if (!event) return res.status(404).json({ message: 'Event not found' });
+    const isOwner = req.user?.role === 'organiser' && String(event.organiser?._id || event.organiser) === String(req.user.id);
+    const canView = req.user?.role === 'admin' || isOwner || event.status === 'published';
+    if (!canView) return res.status(403).json({ message: 'Not authorised' });
     res.json(event);
   } catch (err) {
     next(err);
@@ -274,27 +321,21 @@ exports.deleteEvent = async (req, res, next) => {
 exports.getStats = async (req, res, next) => {
   try {
     const eventMatch = buildEventMatch(req.query);
+    applyRoleScopedEventFilter(eventMatch, req.user);
     const drillLevel = req.query.drill || 'month';
 
     const [filteredEvents, yearRows] = await Promise.all([
       Event.find(eventMatch)
         .select('title category status price createdAt startDate endDate registeredCount capacity')
         .sort({ createdAt: -1 })
+        .maxTimeMS(30000)
         .lean(),
       Event.aggregate([
+        ...(eventMatch.organiser ? [{ $match: { organiser: eventMatch.organiser } }] : []),
         { $group: { _id: { $year: '$startDate' } } },
         { $sort: { _id: -1 } },
-      ]),
+      ]).option({ maxTimeMS: 30000 }),
     ]);
-
-    const eventIds = filteredEvents.map((event) => event._id);
-    const registrations = eventIds.length > 0
-      ? await Registration.find({ event: { $in: eventIds }, status: 'confirmed' })
-        .select('event attendee createdAt')
-        .lean()
-      : [];
-
-    const eventLookup = new Map(filteredEvents.map((event) => [String(event._id), event]));
 
     const overview = filteredEvents.reduce(
       (acc, event) => {
@@ -337,13 +378,12 @@ exports.getStats = async (req, res, next) => {
       if (trendMap.has(key)) trendMap.get(key).eventsCreated += 1;
     });
 
-    registrations.forEach((registration) => {
-      const created = new Date(registration.createdAt);
+    filteredEvents.forEach((event) => {
+      const created = new Date(event.createdAt);
       const key = `${created.getUTCFullYear()}-${created.getUTCMonth() + 1}`;
-      const linkedEvent = eventLookup.get(String(registration.event));
       if (trendMap.has(key)) {
-        trendMap.get(key).registrations += 1;
-        trendMap.get(key).revenue += linkedEvent?.price || 0;
+        trendMap.get(key).registrations += event.registeredCount || 0;
+        trendMap.get(key).revenue += (event.registeredCount || 0) * (event.price || 0);
       }
     });
 
@@ -351,29 +391,6 @@ exports.getStats = async (req, res, next) => {
       _id: { year: bucket.year, month: bucket.month },
       count: bucket.eventsCreated,
       registrations: bucket.registrations,
-    }));
-
-    const attendeeAggMap = new Map();
-    registrations.forEach((registration) => {
-      const attendeeKey = String(registration.attendee);
-      if (!attendeeAggMap.has(attendeeKey)) {
-        attendeeAggMap.set(attendeeKey, {
-          attendee: attendeeKey,
-          registrationsCount: 0,
-          monthKeys: new Set(),
-        });
-      }
-
-      const row = attendeeAggMap.get(attendeeKey);
-      row.registrationsCount += 1;
-      const date = new Date(registration.createdAt);
-      row.monthKeys.add(`${date.getUTCFullYear()}-${date.getUTCMonth() + 1}`);
-    });
-
-    const attendeePoints = Array.from(attendeeAggMap.values()).map((row) => ({
-      attendee: row.attendee,
-      registrationsCount: row.registrationsCount,
-      activeMonths: row.monthKeys.size,
     }));
 
     const selectedParts = [req.query.category, req.query.year, req.query.month, req.query.status].filter(Boolean);
@@ -411,7 +428,7 @@ exports.getStats = async (req, res, next) => {
         registrations: totalRegistrations,
         revenue,
       })),
-      clusters: summarizeClusters(runKMeans(attendeePoints)),
+      clusters: [],
       olap: {
         slice: req.query.category ? `Slice: ${req.query.category}` : 'Slice: all categories',
         dice: selectedParts.length > 1 ? `Dice: ${selectedParts.join(' / ')}` : 'Dice: add more filters to narrow the cube',

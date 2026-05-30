@@ -61,7 +61,7 @@ export default function QandA() {
       const items = Array.isArray(payload.questions) ? payload.questions : [];
       setData({ items, total: payload.total || 0, page: payload.page || 1, pages: payload.pages || 0 });
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to load questions');
+      toast.error(err.code === 'ECONNABORTED' ? 'Server is taking too long. Please try again.' : (err.response?.data?.message || 'Failed to load questions'));
       setData({ items: [], total: 0, page: 1, pages: 0 });
     } finally {
       setLoading(false);
@@ -336,4 +336,3 @@ export default function QandA() {
     </div>
   );
 }
-

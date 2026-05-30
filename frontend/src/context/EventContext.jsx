@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useCallback } from 'react';
+import { createContext, useContext, useState, useCallback, useRef } from 'react';
 import { eventService } from '../services/eventService';
 
 const EventContext = createContext();
@@ -23,29 +23,42 @@ export function EventProvider({ children }) {
   const [pagination, setPagination] = useState({ total: 0, page: 1, pages: 1 });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const eventsRequestId = useRef(0);
+  const statsRequestId = useRef(0);
+  const statsCache = useRef(DEFAULT_STATS);
 
   const fetchEvents = useCallback(async (params = {}) => {
+    const requestId = eventsRequestId.current + 1;
+    eventsRequestId.current = requestId;
     setLoading(true); setError(null);
     try {
       const { data } = await eventService.getAll(params);
+      if (requestId !== eventsRequestId.current) return;
       setEvents(data.events);
       setPagination({ total: data.total, page: data.page, pages: data.pages });
     } catch (err) {
+      if (requestId !== eventsRequestId.current) return;
       setError(err.response?.data?.message || 'Failed to fetch events');
-    } finally { setLoading(false); }
+    } finally {
+      if (requestId === eventsRequestId.current) setLoading(false);
+    }
   }, []);
 
   const fetchStats = useCallback(async (params = {}) => {
+    const requestId = statsRequestId.current + 1;
+    statsRequestId.current = requestId;
     setError(null);
     try {
       const { data } = await eventService.getStats(params);
+      if (requestId !== statsRequestId.current) return statsCache.current;
+      statsCache.current = data;
       setStats(data);
       return data;
     } catch (err) {
-      setStats(DEFAULT_STATS);
+      if (requestId !== statsRequestId.current) return statsCache.current;
       setError(err.response?.data?.message || 'Failed to fetch dashboard stats');
       console.error('Stats error:', err);
-      return DEFAULT_STATS;
+      return statsCache.current;
     }
   }, []);
 

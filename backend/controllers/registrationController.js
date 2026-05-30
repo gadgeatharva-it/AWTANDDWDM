@@ -77,7 +77,7 @@ exports.cancelRegistration = async (req, res, next) => {
 exports.getMyRegistrations = async (req, res, next) => {
   try {
     const registrations = await Registration.find({ attendee: req.user.id, status: 'confirmed' })
-      .populate('event', 'title startDate endDate location category status updatedAt')
+      .populate('event', 'title startDate endDate location city category status externalUrl updatedAt')
       .sort({ createdAt: -1 });
     res.json(registrations);
   } catch (err) {
@@ -114,18 +114,20 @@ exports.getRegistrationActivity = async (req, res, next) => {
     const safePage = Math.max(1, Number(page) || 1);
     const skip = (safePage - 1) * safeLimit;
 
-    const eventFilter = {};
-    if (req.user.role !== 'admin') eventFilter.organiser = req.user.id;
-    if (eventId) eventFilter._id = eventId;
-
-    const eventIds = await Event.find(eventFilter).select('_id').lean();
-    const ids = eventIds.map((row) => row._id);
-
-    if (ids.length === 0) {
-      return res.json({ logs: [], total: 0, page: safePage, pages: 0 });
+    const registrationFilter = {};
+    if (eventId) {
+      const eventFilter = { _id: eventId };
+      if (req.user.role !== 'admin') eventFilter.organiser = req.user.id;
+      const event = await Event.findOne(eventFilter).select('_id').lean();
+      if (!event) return res.json({ logs: [], total: 0, page: safePage, pages: 0 });
+      registrationFilter.event = event._id;
+    } else if (req.user.role !== 'admin') {
+      const eventIds = await Event.find({ organiser: req.user.id }).select('_id').lean();
+      const ids = eventIds.map((row) => row._id);
+      if (ids.length === 0) return res.json({ logs: [], total: 0, page: safePage, pages: 0 });
+      registrationFilter.event = { $in: ids };
     }
 
-    const registrationFilter = { event: { $in: ids } };
     if (attendeeId) registrationFilter.attendee = attendeeId;
 
     const [logs, total] = await Promise.all([
@@ -135,8 +137,9 @@ exports.getRegistrationActivity = async (req, res, next) => {
         .sort({ updatedAt: -1 })
         .skip(skip)
         .limit(safeLimit)
+        .maxTimeMS(8000)
         .lean(),
-      Registration.countDocuments(registrationFilter),
+      Registration.countDocuments(registrationFilter).maxTimeMS(8000),
     ]);
 
     res.json({
@@ -155,6 +158,75 @@ exports.getRegistrationActivity = async (req, res, next) => {
       page: safePage,
       pages: Math.ceil(total / safeLimit),
     });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// GET /api/registrations/my-attendees — attendee list scoped to organiser-owned events
+exports.getMyAttendees = async (req, res, next) => {
+  try {
+    if (req.user.role !== 'organiser') return res.status(403).json({ message: 'Not authorised' });
+
+    const { page = 1, limit = 20, search } = req.query;
+    const safeLimit = Math.min(100, Math.max(1, Number(limit) || 20));
+    const safePage = Math.max(1, Number(page) || 1);
+    const skip = (safePage - 1) * safeLimit;
+
+    const eventIds = await Event.find({ organiser: req.user.id }).select('_id').lean();
+    const ids = eventIds.map((row) => row._id);
+    if (ids.length === 0) return res.json({ attendees: [], total: 0, page: safePage, pages: 0 });
+
+    const pipeline = [
+      { $match: { event: { $in: ids }, status: 'confirmed' } },
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'attendee',
+          foreignField: '_id',
+          as: 'attendee',
+        },
+      },
+      { $unwind: '$attendee' },
+    ];
+
+    const q = String(search || '').trim();
+    if (q) {
+      const escaped = q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      pipeline.push({
+        $match: {
+          $or: [
+            { 'attendee.name': { $regex: escaped, $options: 'i' } },
+            { 'attendee.email': { $regex: escaped, $options: 'i' } },
+          ],
+        },
+      });
+    }
+
+    pipeline.push(
+      {
+        $group: {
+          _id: '$attendee._id',
+          name: { $first: '$attendee.name' },
+          email: { $first: '$attendee.email' },
+          registrations: { $sum: 1 },
+          lastRegisteredAt: { $max: '$createdAt' },
+        },
+      },
+      { $sort: { lastRegisteredAt: -1 } },
+      {
+        $facet: {
+          attendees: [{ $skip: skip }, { $limit: safeLimit }],
+          meta: [{ $count: 'total' }],
+        },
+      }
+    );
+
+    const [result] = await Registration.aggregate(pipeline).option({ maxTimeMS: 8000 });
+    const attendees = result?.attendees || [];
+    const total = result?.meta?.[0]?.total || 0;
+
+    res.json({ attendees, total, page: safePage, pages: Math.ceil(total / safeLimit) });
   } catch (err) {
     next(err);
   }

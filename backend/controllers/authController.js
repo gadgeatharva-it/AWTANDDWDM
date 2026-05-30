@@ -11,7 +11,7 @@ const signToken = (id) =>
 
 function normalizeRole(role) {
   if (role === 'organizer') return 'organiser';
-  if (role === 'organiser' || role === 'attendee' || role === 'admin') return role;
+  if (role === 'organiser' || role === 'attendee') return role;
   return 'attendee';
 }
 

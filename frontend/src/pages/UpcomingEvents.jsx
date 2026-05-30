@@ -47,6 +47,7 @@ export default function UpcomingEvents() {
       date: formatShortDate(next.event.startDate),
       time: formatShortTime(next.event.startDate),
       location: next.event.location || 'Online',
+      externalUrl: next.event.externalUrl || '',
     };
   }, [myRegistrations]);
 
@@ -82,9 +83,28 @@ export default function UpcomingEvents() {
             <div>Time: {upcoming.time}</div>
             <div>Location: {upcoming.location}</div>
           </div>
+          {upcoming.externalUrl && (
+            <a
+              href={upcoming.externalUrl}
+              target="_blank"
+              rel="noreferrer"
+              style={{
+                display: 'inline-block',
+                marginTop: 12,
+                padding: '8px 12px',
+                borderRadius: 8,
+                border: `1px solid ${theme.inputBorder}`,
+                color: '#4f46e5',
+                fontSize: 13,
+                fontWeight: 800,
+                textDecoration: 'none',
+              }}
+            >
+              Visit Website
+            </a>
+          )}
         </div>
       )}
     </div>
   );
 }
-

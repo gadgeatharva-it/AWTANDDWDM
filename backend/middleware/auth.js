@@ -28,6 +28,25 @@ exports.protect = async (req, res, next) => {
   }
 };
 
+exports.optionalProtect = async (req, res, next) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) return next();
+
+    const token = authHeader.split(' ')[1];
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    const user = await User.findById(decoded.id);
+    if (!user || user.isActive === false) return next();
+    if (user.passwordChangedAt && decoded.iat * 1000 < new Date(user.passwordChangedAt).getTime()) return next();
+
+    req.user = { id: user._id.toString(), role: user.role, name: user.name };
+    next();
+  } catch (err) {
+    next();
+  }
+};
+
 exports.restrictTo = (...roles) => (req, res, next) => {
   if (!roles.includes(req.user.role)) {
     return res.status(403).json({ message: 'You do not have permission to perform this action' });

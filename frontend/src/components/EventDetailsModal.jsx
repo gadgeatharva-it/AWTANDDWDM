@@ -93,6 +93,7 @@ export default function EventDetailsModal({
   const sc = statusColors[safeEvent.status] || statusColors.draft;
   const categoryColor = categoryColors[safeEvent.category] || '#6b7280';
   const mapsUrl = googleMapsUrl(safeEvent.location);
+  const externalUrl = String(safeEvent.externalUrl || '').trim();
 
   const overlayStyle = {
     position: 'fixed',
@@ -270,6 +271,25 @@ export default function EventDetailsModal({
               <div style={labelStyle}>Registration Deadline</div>
               <div style={valueStyle}>{safeEvent.registrationDeadline ? formatDate(safeEvent.registrationDeadline) : formatDate(safeEvent.startDate)}</div>
             </div>
+            {externalUrl && (
+              <div>
+                <div style={labelStyle}>Website</div>
+                <a
+                  href={externalUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  onClick={(e) => e.stopPropagation()}
+                  style={{
+                    ...valueStyle,
+                    color: '#4f46e5',
+                    fontWeight: 800,
+                    textDecoration: 'none',
+                  }}
+                >
+                  Open official event website
+                </a>
+              </div>
+            )}
           </div>
 
           <div style={{ marginTop: 14 }}>
