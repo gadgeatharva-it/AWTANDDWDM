@@ -20,6 +20,7 @@ const userRoutes = require('./routes/users');
 const questionRoutes = require('./routes/questions');
 const exportRoutes = require('./routes/export');
 const aiRoutes = require('./routes/aiRoutes');
+const { startEventReminderJob } = require('./jobs/eventReminderJob');
 
 const app = express();
 
@@ -87,6 +88,7 @@ mongoose
   .connect(process.env.MONGO_URI)
   .then(() => {
     console.log('MongoDB connected');
+    startEventReminderJob();
     app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
   })
   .catch((err) => {

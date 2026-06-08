@@ -25,6 +25,20 @@ const registrationSchema = new mongoose.Schema(
       maxlength: [300, 'Notes cannot exceed 300 characters'],
       default: '',
     },
+    reminderSent: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
+    reminderSentAt: {
+      type: Date,
+      default: null,
+    },
+    reminderLastError: {
+      type: String,
+      trim: true,
+      default: '',
+    },
   },
   { timestamps: true }
 );
@@ -34,5 +48,6 @@ registrationSchema.index({ event: 1, attendee: 1 }, { unique: true });
 registrationSchema.index({ event: 1, status: 1, updatedAt: -1 });
 registrationSchema.index({ attendee: 1, status: 1, createdAt: -1 });
 registrationSchema.index({ status: 1, createdAt: -1 });
+registrationSchema.index({ status: 1, reminderSent: 1, event: 1 });
 
 module.exports = mongoose.model('Registration', registrationSchema);

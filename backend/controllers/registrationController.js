@@ -1,12 +1,41 @@
 const Registration = require('../models/Registration');
 const Event = require('../models/Event');
+const User = require('../models/User');
+const {
+  sendEventRegistrationConfirmationEmail,
+  sendEventRegistrationNotificationEmail,
+} = require('../services/emailService');
+
+async function sendRegistrationEmails({ event, attendeeId }) {
+  try {
+    const attendee = await User.findById(attendeeId).select('name email').lean();
+    const organiser = event.organiser;
+
+    if (!attendee) return;
+
+    await Promise.all([
+      sendEventRegistrationConfirmationEmail({ attendee, event }),
+      organiser?.email
+        ? sendEventRegistrationNotificationEmail({
+            organiser,
+            attendee,
+            event,
+          })
+        : Promise.resolve(),
+    ]);
+
+    console.log(`[registrations] Sent registration emails for "${event.title}"`);
+  } catch (emailErr) {
+    console.error('[registrations] Registration email failed:', emailErr?.message || emailErr);
+  }
+}
 
 // POST /api/registrations/register
 exports.registerForEvent = async (req, res, next) => {
   try {
     const { eventId, notes } = req.body;
 
-    const event = await Event.findById(eventId);
+    const event = await Event.findById(eventId).populate('organiser', 'name email');
     if (!event) return res.status(404).json({ message: 'Event not found' });
     if (event.status !== 'published') return res.status(400).json({ message: 'Event is not open for registration' });
     if (event.registeredCount >= event.capacity) {
@@ -33,6 +62,7 @@ exports.registerForEvent = async (req, res, next) => {
     }
 
     await Event.findByIdAndUpdate(eventId, { $inc: { registeredCount: 1 } });
+    await sendRegistrationEmails({ event, attendeeId: req.user.id });
 
     res.status(201).json(registration);
   } catch (err) {
@@ -43,6 +73,8 @@ exports.registerForEvent = async (req, res, next) => {
         if (req.body.notes) existing.notes = req.body.notes;
         const registration = await existing.save();
         await Event.findByIdAndUpdate(req.body.eventId, { $inc: { registeredCount: 1 } });
+        const event = await Event.findById(req.body.eventId).populate('organiser', 'name email');
+        if (event) await sendRegistrationEmails({ event, attendeeId: req.user.id });
         return res.status(201).json(registration);
       }
       return res.status(409).json({ message: 'Already registered for this event' });
