@@ -115,13 +115,13 @@ export default function EventCard({ event, onEdit, onDelete }) {
 
       {showActions && (
         <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 8, marginTop: 'auto' }}>
-          <button onClick={() => onEdit(event)} style={{
+          <button onClick={(e) => { e.stopPropagation(); onEdit(event); }} style={{
             padding: '8px 0', borderRadius: 8, border: `1px solid ${theme.inputBorder}`,
             background: theme.surface, color: theme.textSecondary, fontWeight: 500, fontSize: 13, cursor: 'pointer',
           }}>
             Edit
           </button>
-          <button onClick={() => onDelete(event._id)} style={{
+          <button onClick={(e) => { e.stopPropagation(); onDelete(event._id); }} style={{
             padding: '8px 0', borderRadius: 8, border: `1px solid ${dark ? '#7f1d1d' : '#fee2e2'}`,
             background: dark ? 'rgba(239,68,68,0.1)' : '#fff5f5', color: '#ef4444', fontWeight: 500, fontSize: 13, cursor: 'pointer',
           }}>
@@ -158,7 +158,10 @@ export default function EventCard({ event, onEdit, onDelete }) {
         <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 8, marginTop: externalUrl ? 0 : 'auto' }}>
           {isRegistered ? (
             <button
-              onClick={() => event.onCancelRegistration?.(event)}
+              onClick={(e) => {
+                e.stopPropagation();
+                event.onCancelRegistration?.(event);
+              }}
               style={{
                 padding: '9px 0', borderRadius: 8, border: `1px solid ${dark ? '#7f1d1d' : '#fecaca'}`,
                 background: dark ? 'rgba(239,68,68,0.12)' : '#fff5f5', color: '#dc2626',
@@ -169,7 +172,10 @@ export default function EventCard({ event, onEdit, onDelete }) {
             </button>
           ) : (
             <button
-              onClick={() => event.onRegister?.(event)}
+              onClick={(e) => {
+                e.stopPropagation();
+                event.onRegister?.(event);
+              }}
               disabled={!isPublished || isFull}
               style={{
                 padding: '9px 0', borderRadius: 8, border: 'none',
