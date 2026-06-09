@@ -24,6 +24,7 @@ export default function EventCard({ event, onEdit, onDelete }) {
   const isRegistered = Boolean(event.isRegistered);
   const isPublished = event.status === 'published';
   const isFull = event.registeredCount >= event.capacity;
+  const isPaid = Number(event.price) > 0;
   const externalUrl = String(event.externalUrl || '').trim();
   const recommendationReasons = Array.isArray(event.recommendationReasons)
     ? event.recommendationReasons.filter(Boolean)
@@ -183,7 +184,7 @@ export default function EventCard({ event, onEdit, onDelete }) {
                 fontWeight: 600, fontSize: 13, cursor: !isPublished || isFull ? 'not-allowed' : 'pointer',
               }}
             >
-              {!isPublished ? 'Not Open Yet' : isFull ? 'Event Full' : 'Register Now'}
+              {!isPublished ? 'Not Open Yet' : isFull ? 'Event Full' : isPaid ? 'Pay & Register' : 'Register Now'}
             </button>
           )}
         </div>

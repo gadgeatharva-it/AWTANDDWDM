@@ -11,6 +11,8 @@ export const eventService = {
 
   // Registrations
   register: (eventId, notes) => api.post('/registrations/register', { eventId, notes }),
+  createPaymentOrder: (eventId, notes) => api.post('/registrations/payment-order', { eventId, notes }),
+  verifyPayment: (data) => api.post('/registrations/payment-verify', data),
   cancelRegistration: (eventId) => api.delete(`/registrations/cancel/${eventId}`),
   getMyRegistrations: () => api.get('/registrations/my'),
   getMyAttendees: (params) => api.get('/registrations/my-attendees', { params }),

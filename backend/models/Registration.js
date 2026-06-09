@@ -16,8 +16,43 @@ const registrationSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ['confirmed', 'cancelled', 'waitlisted'],
+      enum: ['pending_payment', 'confirmed', 'cancelled', 'waitlisted'],
       default: 'confirmed',
+    },
+    paymentStatus: {
+      type: String,
+      enum: ['not_required', 'created', 'paid', 'failed', 'refunded'],
+      default: 'not_required',
+      index: true,
+    },
+    amountPaid: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    currency: {
+      type: String,
+      default: 'INR',
+      uppercase: true,
+      trim: true,
+    },
+    razorpayOrderId: {
+      type: String,
+      trim: true,
+      index: true,
+    },
+    razorpayPaymentId: {
+      type: String,
+      trim: true,
+    },
+    razorpaySignature: {
+      type: String,
+      trim: true,
+      select: false,
+    },
+    paidAt: {
+      type: Date,
+      default: null,
     },
     notes: {
       type: String,

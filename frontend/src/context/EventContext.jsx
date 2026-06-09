@@ -2,6 +2,46 @@ import { createContext, useContext, useState, useCallback, useRef } from 'react'
 import { eventService } from '../services/eventService';
 
 const EventContext = createContext();
+const RAZORPAY_SCRIPT_URL = 'https://checkout.razorpay.com/v1/checkout.js';
+
+function loadRazorpayCheckout() {
+  if (window.Razorpay) return Promise.resolve(true);
+
+  return new Promise((resolve, reject) => {
+    const existing = document.querySelector(`script[src="${RAZORPAY_SCRIPT_URL}"]`);
+    if (existing) {
+      existing.addEventListener('load', () => resolve(true), { once: true });
+      existing.addEventListener('error', () => reject(new Error('Unable to load Razorpay checkout')), { once: true });
+      return;
+    }
+
+    const script = document.createElement('script');
+    script.src = RAZORPAY_SCRIPT_URL;
+    script.async = true;
+    script.onload = () => resolve(true);
+    script.onerror = () => reject(new Error('Unable to load Razorpay checkout'));
+    document.body.appendChild(script);
+  });
+}
+
+function openRazorpayCheckout(options) {
+  return new Promise((resolve, reject) => {
+    const checkout = new window.Razorpay({
+      ...options,
+      handler: resolve,
+      modal: {
+        ondismiss: () => reject(new Error('Payment was cancelled')),
+      },
+    });
+
+    checkout.on('payment.failed', (response) => {
+      reject(new Error(response?.error?.description || 'Payment failed'));
+    });
+
+    checkout.open();
+  });
+}
+
 const DEFAULT_STATS = {
   overview: { totalEvents: 0, totalRegistrations: 0, totalRevenue: 0, avgCapacityUsed: 0 },
   byCategory: [],
@@ -111,8 +151,36 @@ export function EventProvider({ children }) {
     }
   }, []);
 
-  const registerForEvent = useCallback(async (eventId, notes = '') => {
-    const { data } = await eventService.register(eventId, notes);
+  const registerForEvent = useCallback(async (eventOrId, notes = '') => {
+    const eventId = typeof eventOrId === 'object' ? eventOrId._id : eventOrId;
+    const eventPrice = Number(typeof eventOrId === 'object' ? eventOrId.price : 0) || 0;
+    let data;
+
+    if (eventPrice > 0) {
+      const { data: order } = await eventService.createPaymentOrder(eventId, notes);
+      await loadRazorpayCheckout();
+      const payment = await openRazorpayCheckout({
+        key: order.keyId,
+        amount: order.amount,
+        currency: order.currency,
+        name: 'EventFlow',
+        description: order.event?.title || 'Event registration',
+        order_id: order.orderId,
+        prefill: {},
+        theme: { color: '#6366f1' },
+      });
+      const verified = await eventService.verifyPayment({
+        eventId,
+        razorpay_order_id: payment.razorpay_order_id,
+        razorpay_payment_id: payment.razorpay_payment_id,
+        razorpay_signature: payment.razorpay_signature,
+      });
+      data = verified.data;
+    } else {
+      const response = await eventService.register(eventId, notes);
+      data = response.data;
+    }
+
     setEvents((prev) => prev.map((event) => (
       event._id === eventId
         ? { ...event, registeredCount: Math.min(event.capacity, event.registeredCount + 1) }

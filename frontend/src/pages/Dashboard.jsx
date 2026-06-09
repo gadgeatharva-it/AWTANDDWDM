@@ -160,7 +160,7 @@ export default function Dashboard() {
 
   const handleRegister = async (event) => {
     try {
-      await registerForEvent(event._id);
+      await registerForEvent(event);
       toast.success(`Registered for ${event.title}`);
       fetchStats(filters);
     } catch (err) {

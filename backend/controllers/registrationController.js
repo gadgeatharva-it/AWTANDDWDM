@@ -1,10 +1,40 @@
 const Registration = require('../models/Registration');
 const Event = require('../models/Event');
 const User = require('../models/User');
+const Razorpay = require('razorpay');
+const crypto = require('crypto');
 const {
   sendEventRegistrationConfirmationEmail,
   sendEventRegistrationNotificationEmail,
 } = require('../services/emailService');
+
+function getRazorpayClient() {
+  const keyId = process.env.RAZORPAY_KEY_ID;
+  const keySecret = process.env.RAZORPAY_KEY_SECRET;
+
+  if (!keyId || !keySecret) {
+    const err = new Error('Razorpay keys are not configured');
+    err.status = 500;
+    throw err;
+  }
+
+  return new Razorpay({ key_id: keyId, key_secret: keySecret });
+}
+
+function toPaise(amount) {
+  return Math.round((Number(amount) || 0) * 100);
+}
+
+function verifyRazorpaySignature({ orderId, paymentId, signature }) {
+  const expected = crypto
+    .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
+    .update(`${orderId}|${paymentId}`)
+    .digest('hex');
+
+  const received = String(signature || '');
+  if (expected.length !== received.length) return false;
+  return crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(received));
+}
 
 async function sendRegistrationEmails({ event, attendeeId }) {
   try {
@@ -47,10 +77,15 @@ exports.registerForEvent = async (req, res, next) => {
       return res.status(409).json({ message: 'Already registered for this event' });
     }
 
+    if (Number(event.price) > 0) {
+      return res.status(402).json({ message: 'Payment is required for this event' });
+    }
+
     let registration;
     if (existing) {
       existing.status = 'confirmed';
       existing.notes = notes || existing.notes;
+      existing.paymentStatus = 'not_required';
       registration = await existing.save();
     } else {
       registration = await Registration.create({
@@ -58,6 +93,7 @@ exports.registerForEvent = async (req, res, next) => {
         attendee: req.user.id,
         notes,
         status: 'confirmed',
+        paymentStatus: 'not_required',
       });
     }
 
@@ -79,6 +115,140 @@ exports.registerForEvent = async (req, res, next) => {
       }
       return res.status(409).json({ message: 'Already registered for this event' });
     }
+    next(err);
+  }
+};
+
+// POST /api/registrations/payment-order
+exports.createPaymentOrder = async (req, res, next) => {
+  try {
+    const { eventId, notes } = req.body;
+
+    const event = await Event.findById(eventId).populate('organiser', 'name email');
+    if (!event) return res.status(404).json({ message: 'Event not found' });
+    if (event.status !== 'published') return res.status(400).json({ message: 'Event is not open for registration' });
+    if (event.registeredCount >= event.capacity) {
+      return res.status(400).json({ message: 'Event is at full capacity' });
+    }
+
+    const amount = toPaise(event.price);
+    if (amount <= 0) return res.status(400).json({ message: 'Payment is not required for this event' });
+
+    const existing = await Registration.findOne({ event: eventId, attendee: req.user.id });
+    if (existing?.status === 'confirmed') {
+      return res.status(409).json({ message: 'Already registered for this event' });
+    }
+
+    const razorpay = getRazorpayClient();
+    const receipt = `evt_${String(event._id).slice(-8)}_${String(req.user.id).slice(-8)}_${Date.now()}`;
+    const order = await razorpay.orders.create({
+      amount,
+      currency: 'INR',
+      receipt,
+      notes: {
+        eventId: String(event._id),
+        attendeeId: String(req.user.id),
+      },
+    });
+
+    let registration;
+    if (existing) {
+      existing.status = 'pending_payment';
+      existing.paymentStatus = 'created';
+      existing.notes = notes || existing.notes;
+      existing.amountPaid = Number(event.price) || 0;
+      existing.currency = order.currency || 'INR';
+      existing.razorpayOrderId = order.id;
+      existing.razorpayPaymentId = undefined;
+      existing.razorpaySignature = undefined;
+      existing.paidAt = null;
+      registration = await existing.save();
+    } else {
+      registration = await Registration.create({
+        event: eventId,
+        attendee: req.user.id,
+        notes,
+        status: 'pending_payment',
+        paymentStatus: 'created',
+        amountPaid: Number(event.price) || 0,
+        currency: order.currency || 'INR',
+        razorpayOrderId: order.id,
+      });
+    }
+
+    res.status(201).json({
+      keyId: process.env.RAZORPAY_KEY_ID,
+      orderId: order.id,
+      amount: order.amount,
+      currency: order.currency,
+      event: {
+        id: event._id,
+        title: event.title,
+        price: event.price,
+      },
+      registrationId: registration._id,
+    });
+  } catch (err) {
+    if (err.code === 11000) return res.status(409).json({ message: 'Registration is already in progress' });
+    next(err);
+  }
+};
+
+// POST /api/registrations/payment-verify
+exports.verifyPaymentAndRegister = async (req, res, next) => {
+  try {
+    const {
+      eventId,
+      razorpay_order_id: orderId,
+      razorpay_payment_id: paymentId,
+      razorpay_signature: signature,
+    } = req.body;
+
+    if (!eventId || !orderId || !paymentId || !signature) {
+      return res.status(400).json({ message: 'Payment verification details are required' });
+    }
+
+    const event = await Event.findById(eventId).populate('organiser', 'name email');
+    if (!event) return res.status(404).json({ message: 'Event not found' });
+
+    const registration = await Registration.findOne({
+      event: eventId,
+      attendee: req.user.id,
+      razorpayOrderId: orderId,
+    });
+    if (!registration) return res.status(404).json({ message: 'Payment order not found' });
+    if (registration.status === 'confirmed' && registration.paymentStatus === 'paid') return res.json(registration);
+
+    if (!verifyRazorpaySignature({ orderId, paymentId, signature })) {
+      registration.paymentStatus = 'failed';
+      await registration.save();
+      return res.status(400).json({ message: 'Payment verification failed' });
+    }
+
+    const updatedEvent = await Event.findOneAndUpdate({
+      _id: eventId,
+      registeredCount: { $lt: event.capacity },
+    }, {
+      $inc: {
+        registeredCount: 1,
+        revenue: Number(event.price) || 0,
+      },
+    });
+    if (!updatedEvent) return res.status(400).json({ message: 'Event is at full capacity' });
+
+    registration.status = 'confirmed';
+    registration.paymentStatus = 'paid';
+    registration.razorpayPaymentId = paymentId;
+    registration.razorpaySignature = signature;
+    registration.amountPaid = Number(event.price) || 0;
+    registration.currency = registration.currency || 'INR';
+    registration.paidAt = new Date();
+    await registration.save();
+
+    await sendRegistrationEmails({ event, attendeeId: req.user.id });
+
+    res.status(201).json(registration);
+  } catch (err) {
     next(err);
   }
 };

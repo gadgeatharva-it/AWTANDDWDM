@@ -116,7 +116,7 @@ export default function Events() {
 
   const handleRegister = async (event) => {
     try {
-      await registerForEvent(event._id);
+      await registerForEvent(event);
       toast.success(`Registered for ${event.title}`);
     } catch (err) {
       toast.error(err.response?.data?.message || err.message || 'Failed to register');
