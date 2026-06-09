@@ -20,6 +20,9 @@ export function EventProvider({ children }) {
   const [events, setEvents] = useState([]);
   const [stats, setStats] = useState(DEFAULT_STATS);
   const [myRegistrations, setMyRegistrations] = useState([]);
+  const [recommendations, setRecommendations] = useState([]);
+  const [recommendationsMeta, setRecommendationsMeta] = useState({ personalized: false, historySize: 0 });
+  const [recommendationsLoading, setRecommendationsLoading] = useState(false);
   const [pagination, setPagination] = useState({ total: 0, page: 1, pages: 1 });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -90,6 +93,24 @@ export function EventProvider({ children }) {
     }
   }, []);
 
+  const fetchRecommendations = useCallback(async (params = {}) => {
+    setRecommendationsLoading(true);
+    try {
+      const { data } = await eventService.getRecommendations(params);
+      setRecommendations(data.recommendations || []);
+      setRecommendationsMeta({
+        personalized: Boolean(data.personalized),
+        historySize: Number(data.historySize) || 0,
+      });
+      return data.recommendations || [];
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to fetch recommendations');
+      return [];
+    } finally {
+      setRecommendationsLoading(false);
+    }
+  }, []);
+
   const registerForEvent = useCallback(async (eventId, notes = '') => {
     const { data } = await eventService.register(eventId, notes);
     setEvents((prev) => prev.map((event) => (
@@ -97,6 +118,7 @@ export function EventProvider({ children }) {
         ? { ...event, registeredCount: Math.min(event.capacity, event.registeredCount + 1) }
         : event
     )));
+    setRecommendations((prev) => prev.filter((event) => event._id !== eventId));
     await fetchMyRegistrations();
     return data;
   }, [fetchMyRegistrations]);
@@ -114,9 +136,10 @@ export function EventProvider({ children }) {
 
   return (
     <EventContext.Provider value={{
-      events, stats, myRegistrations, pagination, loading, error,
+      events, stats, myRegistrations, recommendations, recommendationsMeta, recommendationsLoading,
+      pagination, loading, error,
       fetchEvents, fetchStats, createEvent, updateEvent, deleteEvent,
-      fetchMyRegistrations, registerForEvent, cancelEventRegistration,
+      fetchMyRegistrations, fetchRecommendations, registerForEvent, cancelEventRegistration,
     }}>
       {children}
     </EventContext.Provider>

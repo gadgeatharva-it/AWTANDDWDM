@@ -7,6 +7,7 @@ const {
   updateEvent,
   deleteEvent,
   getStats,
+  getRecommendations,
 } = require('../controllers/eventController');
 const { protect, optionalProtect, restrictTo } = require('../middleware/auth');
 
@@ -25,6 +26,7 @@ const eventValidation = [
 
 // GET /api/events/stats  — must be BEFORE /:id to avoid conflict
 router.get('/stats', protect, getStats);
+router.get('/recommendations', protect, restrictTo('attendee'), getRecommendations);
 
 router.get('/', optionalProtect, getEvents);
 router.get('/:id', optionalProtect, getEvent);

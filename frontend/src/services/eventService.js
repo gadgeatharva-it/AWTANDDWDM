@@ -7,6 +7,7 @@ export const eventService = {
   update: (id, data) => api.put(`/events/${id}`, data),
   remove: (id) => api.delete(`/events/${id}`),
   getStats: (params) => api.get('/events/stats', { params }),
+  getRecommendations: (params) => api.get('/events/recommendations', { params }),
 
   // Registrations
   register: (eventId, notes) => api.post('/registrations/register', { eventId, notes }),

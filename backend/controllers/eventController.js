@@ -2,6 +2,7 @@ const { validationResult } = require('express-validator');
 const mongoose = require('mongoose');
 const Event = require('../models/Event');
 const Registration = require('../models/Registration');
+const { getEventRecommendations } = require('../services/recommendationService');
 
 const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const MONTH_LOOKUP = MONTH_NAMES.reduce((acc, name, index) => {
@@ -288,6 +289,16 @@ exports.getEvent = async (req, res, next) => {
     const canView = req.user?.role === 'admin' || isOwner || event.status === 'published';
     if (!canView) return res.status(403).json({ message: 'Not authorised' });
     res.json(event);
+  } catch (err) {
+    next(err);
+  }
+};
+
+// GET /api/events/recommendations - personalized upcoming events for attendees
+exports.getRecommendations = async (req, res, next) => {
+  try {
+    const result = await getEventRecommendations(req.user.id, req.query.limit);
+    res.json(result);
   } catch (err) {
     next(err);
   }

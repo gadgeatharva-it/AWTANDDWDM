@@ -80,10 +80,14 @@ export default function Dashboard() {
     stats,
     events,
     myRegistrations,
+    recommendations,
+    recommendationsMeta,
+    recommendationsLoading,
     loading,
     fetchStats,
     fetchEvents,
     fetchMyRegistrations,
+    fetchRecommendations,
     registerForEvent,
     cancelEventRegistration,
   } = useEvents();
@@ -110,6 +114,10 @@ export default function Dashboard() {
   useEffect(() => {
     if (user?.role === 'attendee') fetchMyRegistrations();
   }, [fetchMyRegistrations, user?.role]);
+
+  useEffect(() => {
+    if (user?.role === 'attendee') fetchRecommendations({ limit: 6 });
+  }, [fetchRecommendations, user?.role]);
 
   const currentStats = stats || DEFAULT_STATS;
   const { overview, byCategory, byStatus, byMonth, drilldown, pivot, trends, clusters, olap, meta } = currentStats;
@@ -138,6 +146,9 @@ export default function Dashboard() {
   const recentEventsSubtitle = isOrganiser
     ? 'Latest events created by you'
     : 'Latest events visible to all users and organisers';
+  const recommendationsSubtitle = recommendationsMeta.personalized
+    ? `Based on your ${recommendationsMeta.historySize} confirmed registration${recommendationsMeta.historySize === 1 ? '' : 's'}`
+    : 'Trending upcoming events to help you get started';
 
   const handleFilterChange = (key, value) => {
     setFilters((prev) => ({
@@ -387,6 +398,31 @@ export default function Dashboard() {
             )}
           </Panel>
         </>
+      )}
+
+      {isAttendee && (
+        <Panel title="Recommended For You" theme={theme} subtitle={recommendationsSubtitle}>
+          {recommendationsLoading ? (
+            <p style={{ color: theme.textFaint, fontSize: 14 }}>Finding events that match your interests...</p>
+          ) : recommendations.length === 0 ? (
+            <p style={{ color: theme.textFaint, fontSize: 14 }}>No available upcoming events to recommend yet.</p>
+          ) : (
+            <div style={{ display: 'grid', gridTemplateColumns: `repeat(auto-fill, minmax(${isMobile ? 240 : isTablet ? 260 : 280}px, 1fr))`, gap: 16 }}>
+              {recommendations.map((event) => (
+                <EventCard
+                  key={event._id}
+                  event={{
+                    ...event,
+                    isRegistered: registeredIds.has(event._id),
+                    onRegister: handleRegister,
+                    onCancelRegistration: handleCancelRegistration,
+                    onClick: detailsModal.openForEvent,
+                  }}
+                />
+              ))}
+            </div>
+          )}
+        </Panel>
       )}
 
       <Panel title="Recent Events" theme={theme} subtitle={recentEventsSubtitle}>

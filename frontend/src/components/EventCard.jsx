@@ -25,6 +25,9 @@ export default function EventCard({ event, onEdit, onDelete }) {
   const isPublished = event.status === 'published';
   const isFull = event.registeredCount >= event.capacity;
   const externalUrl = String(event.externalUrl || '').trim();
+  const recommendationReasons = Array.isArray(event.recommendationReasons)
+    ? event.recommendationReasons.filter(Boolean)
+    : [];
 
   const fillPct = event.capacity > 0 ? Math.min(100, Math.round((event.registeredCount / event.capacity) * 100)) : 0;
   const sc = statusColors[event.status] || statusColors.draft;
@@ -95,6 +98,20 @@ export default function EventCard({ event, onEdit, onDelete }) {
           }} />
         </div>
       </div>
+
+      {recommendationReasons.length > 0 && (
+        <div style={{
+          padding: '9px 10px',
+          borderRadius: 8,
+          background: dark ? 'rgba(99,102,241,0.12)' : '#eef2ff',
+          color: dark ? '#c7d2fe' : '#4338ca',
+          fontSize: 12,
+          lineHeight: 1.45,
+        }}>
+          <span style={{ fontWeight: 700 }}>Why this event: </span>
+          {recommendationReasons.join(' · ')}
+        </div>
+      )}
 
       {showActions && (
         <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 8, marginTop: 'auto' }}>
